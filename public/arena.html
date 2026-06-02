@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena - El Bruto</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <h1>💪 El Bruto - Arena</h1>
+    <div class="user-info">
+      <a href="/dashboard.html" class="btn btn-secundario">⬅ Volver</a>
+      <button id="logout-btn" class="btn btn-secundario">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Selección de oponentes -->
+    <div id="seleccion-oponentes">
+      <div class="card">
+        <h2>⚔️ Elige un oponente</h2>
+        <p style="color:#8b6fa0;margin-bottom:16px">Combates disponibles hoy: <span id="combates-restantes">3</span> / 3</p>
+        <div id="oponentes-lista" class="oponentes-lista"></div>
+      </div>
+    </div>
+
+    <!-- Pantalla de combate -->
+    <div id="pantalla-combate" class="hidden">
+      <div class="card combate-screen">
+        <h2>⚔️ COMBATE</h2>
+
+        <div class="combatientes">
+          <div id="mi-bruto-info"></div>
+          <div class="vs">VS</div>
+          <div id="oponente-combate"></div>
+        </div>
+
+        <div id="log-combate" class="log-combate"></div>
+
+        <div id="resultado" class="hidden"></div>
+
+        <div id="btn-volver-arena" class="hidden mt-20">
+          <button class="btn btn-primario" onclick="location.reload()">Volver a la arena</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/combate.js"></script>
+</body>
+</html>

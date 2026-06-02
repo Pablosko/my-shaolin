@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - El Bruto</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <h1>💪 El Bruto</h1>
+    <div class="user-info">
+      <span id="user-name"></span>
+      <button id="logout-btn" class="btn btn-secundario">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Tus Brutos</h2>
+      <p style="color:#8b6fa0;margin-top:4px">Máximo 3 brutos por cuenta</p>
+      <div id="error-msg" class="error-msg" style="display:none"></div>
+      <div id="brutos-container" class="brutos-grid"></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

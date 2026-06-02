@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Bruto - El Bruto</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="header">
+    <h1>💪 El Bruto</h1>
+    <div class="user-info">
+      <a href="/dashboard.html" class="btn btn-secundario">⬅ Volver</a>
+      <button id="logout-btn" class="btn btn-secundario">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="bruto-detail">
+        <div class="bruto-detail-sidebar">
+          <div id="bruto-avatar" class="avatar-grande"></div>
+          <div id="bruto-name-display" style="font-size:24px;font-weight:bold"></div>
+          <div id="bruto-level" style="color:#8b6fa0;margin-bottom:16px"></div>
+          <a id="arena-btn" class="btn btn-combatir" style="width:100%">⚔️ Ir a la Arena</a>
+        </div>
+
+        <div>
+          <h3>Estadísticas</h3>
+          <div class="stat-barra">
+            <span class="label">❤️ HP</span>
+            <div class="barra"><div id="hp-fill" class="fill hp" style="width:100%"></div></div>
+            <span class="valor" id="hp-text"></span>
+          </div>
+          <div class="stat-barra">
+            <span class="label">⭐ XP</span>
+            <div class="barra"><div id="xp-fill" class="fill xp" style="width:0%"></div></div>
+            <span class="valor" id="xp-text"></span>
+          </div>
+          <div class="stat-barra">
+            <span class="label">💪 Fuerza</span>
+            <div class="barra"><div id="fuerza-fill" class="fill fuerza" style="width:0%"></div></div>
+            <span class="valor" id="fuerza-text"></span>
+          </div>
+          <div class="stat-barra">
+            <span class="label">🏃 Agilidad</span>
+            <div class="barra"><div id="agilidad-fill" class="fill agilidad" style="width:0%"></div></div>
+            <span class="valor" id="agilidad-text"></span>
+          </div>
+          <div class="stat-barra">
+            <span class="label">⚡ Velocidad</span>
+            <div class="barra"><div id="velocidad-fill" class="fill velocidad" style="width:0%"></div></div>
+            <span class="valor" id="velocidad-text"></span>
+          </div>
+
+          <div style="margin-top:24px">
+            <h4>🗡️ Armas</h4>
+            <div id="armas-container" class="items-grid"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <h4>✨ Habilidades</h4>
+            <div id="habilidades-container" class="items-grid"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <h4>🐾 Mascotas</h4>
+            <div id="mascotas-container" class="items-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Historial de combates</h3>
+      <div id="historial-combates" class="historial-combates"></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/bruto.js"></script>
+</body>
+</html>
