@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
 const { simularCombate } = require('../game/engine');
+const { generarBots } = require('../game/data');
 
 const router = express.Router();
 
@@ -25,6 +26,11 @@ router.get('/oponentes', verificarToken, (req, res) => {
   res.json(result);
 });
 
+router.get('/bots', verificarToken, (req, res) => {
+  const bots = generarBots(5);
+  res.json(bots);
+});
+
 router.get('/historial/:bruto_id', verificarToken, (req, res) => {
   const { bruto_id } = req.params;
   const combates = db.query(`
@@ -41,7 +47,7 @@ router.get('/historial/:bruto_id', verificarToken, (req, res) => {
 });
 
 router.post('/combatir/:oponente_id', verificarToken, (req, res) => {
-  const { bruto_id } = req.body;
+  const { bruto_id, oponente_data } = req.body;
   const oponente_id = parseInt(req.params.oponente_id);
 
   if (!bruto_id) {
@@ -53,13 +59,21 @@ router.post('/combatir/:oponente_id', verificarToken, (req, res) => {
     return res.status(404).json({ error: 'Bruto no encontrado' });
   }
 
-  const oponente = db.get('SELECT * FROM brutos WHERE id = ?', [oponente_id]);
-  if (!oponente) {
-    return res.status(404).json({ error: 'Oponente no encontrado' });
-  }
+  const esBot = oponente_id < 0;
 
-  if (miBruto.user_id === oponente.user_id) {
-    return res.status(400).json({ error: 'No puedes combatir contra tu propio bruto' });
+  let oponente;
+  if (esBot && oponente_data) {
+    oponente = oponente_data;
+  } else if (!esBot) {
+    oponente = db.get('SELECT * FROM brutos WHERE id = ?', [oponente_id]);
+    if (!oponente) {
+      return res.status(404).json({ error: 'Oponente no encontrado' });
+    }
+    if (miBruto.user_id === oponente.user_id) {
+      return res.status(400).json({ error: 'No puedes combatir contra tu propio bruto' });
+    }
+  } else {
+    return res.status(400).json({ error: 'Datos de bot no proporcionados' });
   }
 
   const hoy = new Date().toISOString().split('T')[0];
@@ -77,17 +91,19 @@ router.post('/combatir/:oponente_id', verificarToken, (req, res) => {
 
   const b2Completo = {
     ...oponente,
-    armas: db.query('SELECT * FROM armas WHERE bruto_id = ?', [oponente.id]),
-    habilidades: db.query('SELECT * FROM habilidades WHERE bruto_id = ?', [oponente.id]),
-    mascota: db.query('SELECT * FROM mascotas WHERE bruto_id = ?', [oponente.id])[0] || null,
+    armas: oponente.armas || [],
+    habilidades: oponente.habilidades || [],
+    mascota: (oponente.mascotas && oponente.mascotas[0]) || oponente.mascota || null,
   };
 
   const resultado = simularCombate(b1Completo, b2Completo);
 
-  db.run(
-    'INSERT INTO combates (bruto1_id, bruto2_id, winner_id, log) VALUES (?, ?, ?, ?)',
-    [miBruto.id, oponente.id, resultado.winner_id, resultado.log]
-  );
+  if (!esBot) {
+    db.run(
+      'INSERT INTO combates (bruto1_id, bruto2_id, winner_id, log) VALUES (?, ?, ?, ?)',
+      [miBruto.id, oponente.id, resultado.winner_id, resultado.log]
+    );
+  }
 
   if (resultado.winner_id === miBruto.id) {
     const newXp = miBruto.xp + 2;

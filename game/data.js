@@ -60,8 +60,66 @@ function generarStatsIniciales() {
   };
 }
 
+const nombresBot = [
+  'Maestro Wong', 'Shaolin Lee', 'Dragón Xu', 'Tigre Chen',
+  'Mono Zhang', 'Grulla Wang', 'Serpiente Li', 'Leopardo Wu',
+  'Loto Dorado', 'Jade Feng', 'Tormenta Huang', 'Fénix Zhou',
+  'Bambú Kang', 'Rayo Tsao', 'Montaña He', 'Río Ming',
+  'Viento Yang', 'Fuego Bao', 'Ola Zheng', 'Sombra Yue',
+];
+
+function generarBot() {
+  const stats = generarStatsIniciales();
+  const genero = Math.random() < 0.5 ? 'masculino' : 'femenino';
+  const nivel = Math.floor(Math.random() * 5) + 1;
+  const factorNivel = 1 + (nivel - 1) * 0.2;
+
+  const hpBase = stats.hp;
+  const arma = Math.random() < 0.4 ? getRandomArma() : null;
+  const habilidad = Math.random() < 0.3 ? getRandomHabilidad() : null;
+  const mascota = Math.random() < 0.2 ? getRandomMascota() : null;
+
+  return {
+    id: -Math.floor(Math.random() * 10000) - 1,
+    user_id: -1,
+    name: getRandomItem(nombresBot),
+    genero,
+    level: nivel,
+    xp: 0,
+    hp: Math.floor(hpBase * factorNivel),
+    max_hp: Math.floor(hpBase * factorNivel),
+    fuerza: Math.floor((stats.fuerza + nivel) * factorNivel),
+    agilidad: Math.floor((stats.agilidad + nivel) * factorNivel),
+    velocidad: Math.floor((stats.velocidad + nivel) * factorNivel),
+    combates_hoy: 0,
+    ultimo_combate: null,
+    created_at: new Date().toISOString(),
+    username: '🤖 Bot',
+    armas: arma ? [{ ...arma, equipada: true }] : [],
+    habilidades: habilidad ? [habilidad] : [],
+    mascotas: mascota ? [mascota] : [],
+  };
+}
+
+function generarBots(cantidad) {
+  const bots = [];
+  const usados = new Set();
+  for (let i = 0; i < cantidad; i++) {
+    let bot = generarBot();
+    let intentos = 0;
+    while (usados.has(bot.name) && intentos < 10) {
+      bot = generarBot();
+      intentos++;
+    }
+    usados.add(bot.name);
+    bots.push(bot);
+  }
+  return bots;
+}
+
 module.exports = {
   armas, habilidades, mascotas,
   getRandomArma, getRandomHabilidad, getRandomMascota,
   generarStatsIniciales,
+  generarBots, nombresBot,
 };

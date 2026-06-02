@@ -1,58 +1,112 @@
 let brutoId = null;
 let oponenteSeleccionado = null;
+let modoBot = false;
+let miBrutoInfo = null;
 
 async function loadArena() {
   const params = new URLSearchParams(window.location.search);
   brutoId = parseInt(params.get('bruto_id'));
 
   try {
-    const miBruto = await API.get(`/brutos/${brutoId}`);
-    const avatar = miBruto.genero === 'femenino' ? '👩' : '👨';
-    const color = miBruto.genero === 'femenino' ? '#e879f9' : '#60a5fa';
+    miBrutoInfo = await API.get(`/brutos/${brutoId}`);
+    const avatar = miBrutoInfo.genero === 'femenino' ? '👩' : '👨';
+    const color = miBrutoInfo.genero === 'femenino' ? '#e879f9' : '#60a5fa';
 
     document.getElementById('mi-bruto-info').innerHTML = `
       <div class="combatiente">
         <div class="avatar" style="border-color:${color}">${avatar}</div>
-        <div style="font-weight:bold">${miBruto.name}</div>
-        <div style="font-size:13px;color:#8b6fa0">Nv.${miBruto.level}</div>
+        <div id="mi-bruto-nombre" style="font-weight:bold">${miBrutoInfo.name}</div>
+        <div style="font-size:13px;color:#8b6fa0">Nv.${miBrutoInfo.level}</div>
         <div class="stat-barra" style="margin-top:8px">
           <span class="label">HP</span>
-          <div class="barra"><div class="fill hp" style="width:${(miBruto.hp / miBruto.max_hp) * 100}%"></div></div>
-          <span class="valor">${miBruto.hp}</span>
+          <div class="barra"><div id="mi-hp-fill" class="fill hp" style="width:${(miBrutoInfo.hp / miBrutoInfo.max_hp) * 100}%"></div></div>
+          <span class="valor" id="mi-hp-text">${miBrutoInfo.hp}</span>
         </div>
       </div>
     `;
+
+    const restantes = 3 - (miBrutoInfo.ultimo_combate === new Date().toISOString().split('T')[0] ? miBrutoInfo.combates_hoy : 0);
+    document.getElementById('combates-restantes').textContent = Math.max(0, restantes);
   } catch (err) {
     if (err.message.includes('Token')) { logout(); }
     else { alert('Error: ' + err.message); }
   }
 
+  cargarOponentes();
+}
+
+async function cargarOponentes() {
   try {
     const oponentes = await API.get('/arena/oponentes');
     const listEl = document.getElementById('oponentes-lista');
 
-    oponentes.forEach(op => {
-      const card = document.createElement('div');
-      card.className = 'oponente-card';
-      card.innerHTML = `
-        <div class="nombre">${op.name}</div>
-        <div class="dueño">👤 ${op.username}</div>
-        <div style="font-size:13px;margin-top:8px">
-          Nv.${op.level} · ❤️${op.hp} · 💪${op.fuerza} · 🏃${op.agilidad} · ⚡${op.velocidad}
+    if (oponentes.length === 0) {
+      listEl.innerHTML = `
+        <div class="card" style="text-align:center;grid-column:1/-1">
+          <div style="font-size:48px;margin-bottom:12px">😴</div>
+          <div style="color:#8b6fa0;margin-bottom:16px">No hay guerreros disponibles en la arena...</div>
+          <button class="btn btn-combatir" onclick="cargarBots()">🤖 Generar bots de práctica</button>
         </div>
-        <button class="btn btn-combatir mt-12" style="width:100%">Combatir</button>
       `;
-      card.querySelector('button').addEventListener('click', () => iniciarCombate(op));
+      return;
+    }
+
+    listEl.innerHTML = '';
+
+    oponentes.forEach(op => {
+      const card = crearCardOponente(op);
       listEl.appendChild(card);
     });
+
+    const botBtn = document.createElement('div');
+    botBtn.style.cssText = 'grid-column:1/-1;text-align:center;margin-top:12px';
+    botBtn.innerHTML = `<button class="btn btn-secundario" onclick="cargarBots()">🤖 O practicar contra bots</button>`;
+    listEl.appendChild(botBtn);
   } catch (err) {
     if (err.message.includes('Token')) { logout(); }
     else { alert('Error: ' + err.message); }
   }
 }
 
-async function iniciarCombate(oponente) {
+async function cargarBots() {
+  const listEl = document.getElementById('oponentes-lista');
+  listEl.innerHTML = '<div style="text-align:center;color:#8b6fa0;grid-column:1/-1">Generando guerreros de práctica...</div>';
+
+  try {
+    const bots = await API.get('/arena/bots');
+    listEl.innerHTML = '';
+    bots.forEach(bot => {
+      const card = crearCardOponente(bot);
+      listEl.appendChild(card);
+    });
+  } catch (err) {
+    alert('Error al generar bots: ' + err.message);
+  }
+}
+
+function crearCardOponente(op) {
+  const esBot = op.id < 0;
+  const avatar = op.genero === 'femenino' ? '👩' : '👨';
+
+  const card = document.createElement('div');
+  card.className = 'oponente-card';
+  card.innerHTML = `
+    <div class="nombre">${op.name}</div>
+    <div class="dueño">${esBot ? '🤖 Bot' : '👤 ' + op.username}</div>
+    <div style="font-size:13px;margin-top:8px">
+      Nv.${op.level} · ❤️${op.hp} · 💪${op.fuerza} · 🏃${op.agilidad} · ⚡${op.velocidad}
+    </div>
+    ${op.armas && op.armas.length > 0 ? '<div style="font-size:11px;color:#8b6fa0">🗡️ ' + op.armas.map(a => a.nombre).join(', ') + '</div>' : ''}
+    ${op.mascotas && op.mascotas.length > 0 ? '<div style="font-size:11px;color:#8b6fa0">🐾 ' + op.mascotas.map(m => m.nombre).join(', ') + '</div>' : ''}
+    <button class="btn btn-combatir mt-12" style="width:100%">⚔️ Combatir</button>
+  `;
+  card.querySelector('button').addEventListener('click', () => iniciarCombate(op, esBot));
+  return card;
+}
+
+async function iniciarCombate(oponente, esBot = false) {
   oponenteSeleccionado = oponente;
+  modoBot = esBot;
 
   document.getElementById('seleccion-oponentes').classList.add('hidden');
   document.getElementById('pantalla-combate').classList.remove('hidden');
@@ -63,21 +117,26 @@ async function iniciarCombate(oponente) {
   document.getElementById('oponente-combate').innerHTML = `
     <div class="combatiente">
       <div class="avatar" style="border-color:${color}">${avatar}</div>
-      <div style="font-weight:bold">${oponente.name}</div>
-      <div style="font-size:13px;color:#8b6fa0">Nv.${oponente.level} · ${oponente.username}</div>
+      <div id="op-nombre-text" style="font-weight:bold">${oponente.name}</div>
+      <div style="font-size:13px;color:#8b6fa0">${modoBot ? '🤖 Bot' : '👤 ' + (oponente.username || '')} · Nv.${oponente.level}</div>
       <div class="stat-barra" style="margin-top:8px">
         <span class="label">HP</span>
         <div class="barra"><div id="op-hp-fill" class="fill hp" style="width:100%"></div></div>
-        <span class="valor" id="op-hp-text">${oponente.hp}</span>
+        <span class="valor" id="op-hp-text">${oponente.max_hp || oponente.hp}</span>
       </div>
     </div>
   `;
 
   document.getElementById('log-combate').innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Preparando combate...</div>';
   document.getElementById('resultado').classList.add('hidden');
+  document.getElementById('btn-volver-arena').classList.add('hidden');
 
   try {
-    const result = await API.post(`/arena/combatir/${oponente.id}`, { bruto_id: brutoId });
+    const body = { bruto_id: brutoId };
+    if (modoBot) {
+      body.oponente_data = oponente;
+    }
+    const result = await API.post(`/arena/combatir/${oponente.id}`, body);
     reproducirCombate(result);
   } catch (err) {
     alert('Error: ' + err.message);
@@ -88,15 +147,20 @@ async function iniciarCombate(oponente) {
 async function reproducirCombate(result) {
   const log = result.log;
   const logEl = document.getElementById('log-combate');
-  const hpOpText = document.getElementById('op-hp-text');
-  const hpOpFill = document.getElementById('op-hp-fill');
-  const hpMiFill = document.querySelector('#mi-bruto-info .fill.hp');
-  const hpMiText = document.querySelector('#mi-bruto-info .valor');
 
-  let hpMiActual = log.length > 0 ? log[0].hp_atacante : 0;
-  let hpOpActual = log.length > 0 ? log[0].hp_defensor : 0;
-  const hpMiMax = parseInt(hpMiText.textContent);
-  const hpOpMax = oponenteSeleccionado ? oponenteSeleccionado.max_hp : oponenteSeleccionado.hp;
+  const miNombre = document.getElementById('mi-bruto-nombre').textContent;
+  const opNombre = document.getElementById('op-nombre-text').textContent;
+
+  const miHpMax = miBrutoInfo.max_hp;
+  const opHpMax = oponenteSeleccionado.max_hp || oponenteSeleccionado.hp;
+
+  const miHpFill = document.getElementById('mi-hp-fill');
+  const miHpText = document.getElementById('mi-hp-text');
+  const opHpFill = document.getElementById('op-hp-fill');
+  const opHpText = document.getElementById('op-hp-text');
+
+  let hpMiActual = miHpMax;
+  let hpOpActual = opHpMax;
 
   logEl.innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ ¡Combatiendo!</div>';
 
@@ -105,21 +169,19 @@ async function reproducirCombate(result) {
 
     await delay(1200);
 
-    if (entry.atacante_nombre === document.querySelector('#mi-bruto-info div:first-child').textContent) {
+    if (entry.atacante_nombre === miNombre) {
       hpOpActual = entry.hp_defensor;
-    } else {
       hpMiActual = entry.hp_atacante;
+    } else {
+      hpMiActual = entry.hp_defensor;
+      hpOpActual = entry.hp_atacante;
     }
 
-    const hpOpPercent = Math.max(0, (hpOpActual / hpOpMax) * 100);
-    const hpMiPercent = Math.max(0, (hpMiActual / hpMiMax) * 100);
+    opHpFill.style.width = Math.max(0, (hpOpActual / opHpMax) * 100) + '%';
+    opHpText.textContent = Math.max(0, hpOpActual);
+    miHpFill.style.width = Math.max(0, (hpMiActual / miHpMax) * 100) + '%';
+    miHpText.textContent = Math.max(0, hpMiActual);
 
-    hpOpFill.style.width = `${hpOpPercent}%`;
-    hpOpText.textContent = Math.max(0, hpOpActual);
-    hpMiFill.style.width = `${hpMiPercent}%`;
-    hpMiText.textContent = Math.max(0, hpMiActual);
-
-    let clase = 'danio';
     let texto = '';
 
     if (entry.esquivo || entry.daño === 0) {
