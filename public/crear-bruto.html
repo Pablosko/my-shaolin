@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Bruto - El Bruto</title>
+  <title>Crear Guerrero - My Shaolin</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <div class="header">
-    <h1>💪 El Bruto</h1>
+    <h1>🥋 My Shaolin</h1>
     <div class="user-info">
       <span id="user-name"></span>
       <button id="logout-btn" class="btn btn-secundario">Salir</button>
@@ -17,13 +17,13 @@
 
   <div class="container">
     <div class="card" style="max-width:600px;margin:0 auto">
-      <h2 style="text-align:center">Crear nuevo Bruto</h2>
+      <h2 style="text-align:center">Crear nuevo Guerrero</h2>
 
       <!-- Paso 1: Nombre y género -->
       <div id="paso-1" class="creacion-paso active">
         <div class="form-group">
-          <label>Nombre del Bruto</label>
-          <input type="text" id="bruto-name" placeholder="Ej: Brutalus Maximus" maxlength="20">
+          <label>Nombre del Guerrero</label>
+          <input type="text" id="bruto-name" placeholder="Ej: Shaolin Master" maxlength="20">
         </div>
 
         <label style="display:block;margin-bottom:12px;color:#a78bfa">Género</label>
@@ -61,7 +61,7 @@
           <div class="eleccion-item" onclick="elegirOpcion(0)">
             <div class="icono">🗡️</div>
             <div class="titulo">Arma</div>
-            <div class="desc">Recibe un arma aleatoria para tu bruto</div>
+            <div class="desc">Recibe un arma aleatoria para tu guerrero</div>
           </div>
           <div class="eleccion-item" onclick="elegirOpcion(1)">
             <div class="icono">✨</div>
@@ -75,7 +75,7 @@
           </div>
         </div>
 
-        <button id="crear-btn" class="btn btn-primario mt-20" style="width:100%" onclick="crearBruto()" disabled>Crear Bruto</button>
+        <button id="crear-btn" class="btn btn-primario mt-20" style="width:100%" onclick="crearBruto()" disabled>Crear Guerrero</button>
       </div>
 
       <!-- Paso 4: Resultado -->

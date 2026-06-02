@@ -36,7 +36,7 @@ async function loadBrutos() {
     if (brutos.length < 3) {
       const nuevoCard = document.createElement('div');
       nuevoCard.className = 'nuevo-bruto-card';
-      nuevoCard.innerHTML = '➕<br>Nuevo Bruto';
+      nuevoCard.innerHTML = '➕<br>Nuevo Guerrero';
       nuevoCard.addEventListener('click', () => {
         window.location.href = '/crear-bruto.html';
       });

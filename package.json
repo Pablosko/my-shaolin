@@ -1,7 +1,7 @@
 {
-  "name": "el-bruto",
+  "name": "my-shaolin",
   "version": "1.0.0",
-  "description": "Clon del juego El Bruto - Multijugador web",
+  "description": "My Shaolin - Juego multijugador de artes marciales (inspirado en El Bruto)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

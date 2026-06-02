@@ -16,7 +16,7 @@ function seleccionarGenero(genero) {
 function siguientePaso() {
   if (pasoActual === 1) {
     const name = document.getElementById('bruto-name').value.trim();
-    if (!name) { alert('Elige un nombre para tu bruto'); return; }
+    if (!name) { alert('Elige un nombre para tu guerrero'); return; }
     if (!brutoData.genero) { alert('Selecciona un género'); return; }
     brutoData.name = name;
     mostrarPaso(2);
@@ -78,7 +78,7 @@ async function crearBruto() {
   } catch (err) {
     alert('Error: ' + err.message);
     document.getElementById('crear-btn').disabled = false;
-    document.getElementById('crear-btn').textContent = 'Crear Bruto';
+    document.getElementById('crear-btn').textContent = 'Crear Guerrero';
   }
 }
 
