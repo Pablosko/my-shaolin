@@ -11,6 +11,7 @@ async function start() {
   const authRoutes = require('./routes/auth');
   const brutoRoutes = require('./routes/bruto');
   const combateRoutes = require('./routes/combate');
+  const adminRoutes = require('./routes/admin');
 
   const app = express();
   const PORT = process.env.PORT || 3000;
@@ -22,6 +23,11 @@ async function start() {
   app.use('/api/auth', authRoutes);
   app.use('/api/brutos', brutoRoutes);
   app.use('/api/arena', combateRoutes);
+  app.use('/api/admin', adminRoutes);
+
+  app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  });
 
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));

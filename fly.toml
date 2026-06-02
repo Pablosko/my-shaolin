@@ -1,5 +1,5 @@
-app = "el-bruto"
-primary_region = "mad"
+app = "myshaolin"
+primary_region = "cdg"
 
 [http_service]
   internal_port = 3000
@@ -10,5 +10,5 @@ primary_region = "mad"
   processes = ["app"]
 
 [[mounts]]
-  source = "elbruto_data"
+  source = "myshaolin_data"
   destination = "/app/data"

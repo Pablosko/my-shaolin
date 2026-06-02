@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - My Shaolin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #4a3060; }
+    th { color: #a78bfa; font-weight: 600; }
+    td { color: #e0d0f0; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    .badge-ok { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #10b981; }
+    .badge-err { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid #ef4444; }
+    .accion-btn { padding: 4px 12px; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; }
+    .accion-btn.danger { background: #dc2626; color: white; }
+    .accion-btn.danger:hover { background: #ef4444; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: rgba(30,15,50,0.5); border: 1px solid #4a3060; border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-card .numero { font-size: 32px; font-weight: bold; color: #a78bfa; }
+    .stat-card .label { font-size: 13px; color: #8b6fa0; margin-top: 4px; }
+    .admin-login { max-width: 400px; margin: 100px auto; }
+    .btn-tab { padding: 8px 16px; margin-right: 4px; cursor: pointer; border: 1px solid #4a3060; background: rgba(30,15,50,0.5); color: #8b6fa0; border-radius: 6px 6px 0 0; }
+    .btn-tab.active { background: rgba(139,92,246,0.2); color: #a78bfa; border-color: #8b5cf6; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🥋 My Shaolin - Admin</h1>
+    <div class="user-info">
+      <a href="/dashboard.html" class="btn btn-secundario">⬅ Volver al juego</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Login -->
+    <div id="admin-login" class="admin-login card">
+      <h2 style="text-align:center">🔑 Panel Admin</h2>
+      <p style="text-align:center;color:#8b6fa0;margin-bottom:16px">Introduce la clave maestra</p>
+      <div id="admin-error" class="error-msg"></div>
+      <div class="form-group">
+        <label>Clave de administrador</label>
+        <input type="password" id="admin-key-input" placeholder="Clave maestra">
+      </div>
+      <button class="btn btn-primario" style="width:100%" onclick="loginAdmin()">Acceder</button>
+    </div>
+
+    <!-- Panel -->
+    <div id="admin-panel" class="hidden">
+      <div class="card">
+        <div style="display:flex;gap:4px;margin-bottom:16px">
+          <button class="btn-tab active" data-tab="resumen" onclick="switchTab('resumen')">📊 Resumen</button>
+          <button class="btn-tab" data-tab="usuarios" onclick="switchTab('usuarios')">👥 Usuarios</button>
+          <button class="btn-tab" data-tab="brutos" onclick="switchTab('guerreros')">🥋 Guerreros</button>
+          <button class="btn-tab" data-tab="combates" onclick="switchTab('combates')">⚔️ Combates</button>
+        </div>
+
+        <div id="tab-resumen" class="tab-content active"></div>
+        <div id="tab-usuarios" class="tab-content"></div>
+        <div id="tab-guerreros" class="tab-content"></div>
+        <div id="tab-combates" class="tab-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminAuthed = false;
+
+    async function apiAdmin(method, path, body = null) {
+      const key = document.getElementById('admin-key-input').value;
+      const headers = { 'Content-Type': 'application/json', 'x-admin-key': key };
+      const config = { method, headers };
+      if (body) config.body = JSON.stringify(body);
+      const res = await fetch('/api/admin' + path, config);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error');
+      return data;
+    }
+
+    async function loginAdmin() {
+      const key = document.getElementById('admin-key-input').value;
+      const errEl = document.getElementById('admin-error');
+      errEl.style.display = 'none';
+      try {
+        await apiAdmin('POST', '/login', { key });
+        adminAuthed = true;
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        loadResumen();
+      } catch (e) {
+        errEl.textContent = 'Clave incorrecta';
+        errEl.style.display = 'block';
+      }
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.btn-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.querySelector(`.btn-tab[data-tab="${tab}"]`).classList.add('active');
+
+      if (tab === 'usuarios') loadUsuarios();
+      if (tab === 'guerreros') loadBrutos();
+      if (tab === 'combates') loadCombates();
+    }
+
+    async function loadResumen() {
+      try {
+        const users = await apiAdmin('GET', '/users');
+        const brutos = await apiAdmin('GET', '/brutos');
+        const combates = await apiAdmin('GET', '/combates');
+
+        document.getElementById('tab-resumen').innerHTML = `
+          <div class="stats-grid">
+            <div class="stat-card"><div class="numero">${users.length}</div><div class="label">👥 Usuarios</div></div>
+            <div class="stat-card"><div class="numero">${brutos.length}</div><div class="label">🥋 Guerreros</div></div>
+            <div class="stat-card"><div class="numero">${combates.length}</div><div class="label">⚔️ Combates</div></div>
+          </div>
+          <h4>Últimos usuarios</h4>
+          <table>
+            <tr><th>ID</th><th>Usuario</th><th>Email</th><th>Guerreros</th><th>Combates</th><th>Registro</th></tr>
+            ${users.slice(-5).reverse().map(u => `
+              <tr>
+                <td>${u.id}</td><td>${u.username}</td><td>${u.email}</td>
+                <td>${u.brutos.length}</td><td>${u.combates}</td>
+                <td>${new Date(u.created_at).toLocaleDateString()}</td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+      } catch(e) { document.getElementById('tab-resumen').innerHTML = `<span class="badge badge-err">Error: ${e.message}</span>`; }
+    }
+
+    async function loadUsuarios() {
+      try {
+        const users = await apiAdmin('GET', '/users');
+        document.getElementById('tab-usuarios').innerHTML = `
+          <h4>👥 Todos los usuarios (${users.length})</h4>
+          <table>
+            <tr><th>ID</th><th>Usuario</th><th>Email</th><th>Guerreros</th><th>Combates</th><th>Registro</th><th>Acción</th></tr>
+            ${users.map(u => `
+              <tr>
+                <td>${u.id}</td><td>${u.username}</td><td>${u.email}</td>
+                <td>${u.brutos.map(b => b.name).join(', ') || '-'}</td>
+                <td>${u.combates}</td>
+                <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                <td><button class="accion-btn danger" onclick="borrarUsuario(${u.id})">🗑️</button></td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+      } catch(e) { document.getElementById('tab-usuarios').innerHTML = `<span class="badge badge-err">Error: ${e.message}</span>`; }
+    }
+
+    async function loadBrutos() {
+      try {
+        const brutos = await apiAdmin('GET', '/brutos');
+        document.getElementById('tab-guerreros').innerHTML = `
+          <h4>🥋 Todos los guerreros (${brutos.length})</h4>
+          <table>
+            <tr><th>ID</th><th>Nombre</th><th>Dueño</th><th>Nivel</th><th>Género</th><th>HP</th><th>Combates</th><th>Acción</th></tr>
+            ${brutos.map(b => `
+              <tr>
+                <td>${b.id}</td><td>${b.name}</td><td>${b.username}</td>
+                <td>${b.level}</td><td>${b.genero === 'femenino' ? '♀' : '♂'}</td>
+                <td>${b.hp}/${b.max_hp}</td><td>${b.combates}</td>
+                <td><button class="accion-btn danger" onclick="borrarBruto(${b.id})">🗑️</button></td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+      } catch(e) { document.getElementById('tab-guerreros').innerHTML = `<span class="badge badge-err">Error: ${e.message}</span>`; }
+    }
+
+    async function loadCombates() {
+      try {
+        const combates = await apiAdmin('GET', '/combates');
+        document.getElementById('tab-combates').innerHTML = `
+          <h4>⚔️ Últimos 50 combates</h4>
+          <table>
+            <tr><th>ID</th><th>Bruto 1</th><th>Bruto 2</th><th>Ganador</th><th>Fecha</th></tr>
+            ${combates.map(c => `
+              <tr>
+                <td>${c.id}</td><td>${c.b1_name}</td><td>${c.b2_name}</td>
+                <td><span class="badge ${c.winner_id === c.bruto1_id ? 'badge-ok' : 'badge-err'}">${c.winner_id === c.bruto1_id ? c.b1_name : c.b2_name}</span></td>
+                <td>${new Date(c.created_at).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+      } catch(e) { document.getElementById('tab-combates').innerHTML = `<span class="badge badge-err">Error: ${e.message}</span>`; }
+    }
+
+    async function borrarUsuario(id) {
+      if (!confirm('¿Borrar usuario #' + id + '? También se borrarán sus guerreros y combates.')) return;
+      try {
+        await apiAdmin('DELETE', '/users/' + id);
+        loadUsuarios();
+        loadResumen();
+      } catch(e) { alert('Error: ' + e.message); }
+    }
+
+    async function borrarBruto(id) {
+      if (!confirm('¿Borrar guerrero #' + id + '?')) return;
+      try {
+        await apiAdmin('DELETE', '/brutos/' + id);
+        loadBrutos();
+        loadResumen();
+      } catch(e) { alert('Error: ' + e.message); }
+    }
+  </script>
+</body>
+</html>
