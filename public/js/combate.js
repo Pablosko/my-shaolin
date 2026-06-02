@@ -148,16 +148,22 @@ async function reproducirCombate(result) {
   const log = result.log;
   const logEl = document.getElementById('log-combate');
 
-  const miNombre = document.getElementById('mi-bruto-nombre').textContent;
-  const opNombre = document.getElementById('op-nombre-text').textContent;
-
-  const miHpMax = miBrutoInfo.max_hp;
-  const opHpMax = oponenteSeleccionado.max_hp || oponenteSeleccionado.hp;
-
+  const miNombreEl = document.getElementById('mi-bruto-nombre');
+  const opNombreEl = document.getElementById('op-nombre-text');
   const miHpFill = document.getElementById('mi-hp-fill');
   const miHpText = document.getElementById('mi-hp-text');
   const opHpFill = document.getElementById('op-hp-fill');
   const opHpText = document.getElementById('op-hp-text');
+
+  if (!miNombreEl || !opNombreEl || !miHpFill || !miHpText || !opHpFill || !opHpText) {
+    renderResultadoDirecto(result);
+    return;
+  }
+
+  const miNombre = miNombreEl.textContent;
+  const opNombre = opNombreEl.textContent;
+  const miHpMax = miBrutoInfo.max_hp;
+  const opHpMax = oponenteSeleccionado.max_hp || oponenteSeleccionado.hp;
 
   let hpMiActual = miHpMax;
   let hpOpActual = opHpMax;
@@ -177,10 +183,10 @@ async function reproducirCombate(result) {
       hpOpActual = entry.hp_atacante;
     }
 
-    opHpFill.style.width = Math.max(0, (hpOpActual / opHpMax) * 100) + '%';
-    opHpText.textContent = Math.max(0, hpOpActual);
-    miHpFill.style.width = Math.max(0, (hpMiActual / miHpMax) * 100) + '%';
-    miHpText.textContent = Math.max(0, hpMiActual);
+    if (opHpFill) opHpFill.style.width = Math.max(0, (hpOpActual / opHpMax) * 100) + '%';
+    if (opHpText) opHpText.textContent = Math.max(0, hpOpActual);
+    if (miHpFill) miHpFill.style.width = Math.max(0, (hpMiActual / miHpMax) * 100) + '%';
+    if (miHpText) miHpText.textContent = Math.max(0, hpMiActual);
 
     let texto = '';
 
@@ -229,6 +235,41 @@ async function reproducirCombate(result) {
   }
 
   document.getElementById('btn-volver-arena').classList.remove('hidden');
+}
+
+function renderResultadoDirecto(result) {
+  const log = result.log;
+  const logEl = document.getElementById('log-combate');
+
+  logEl.innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Resultado del combate</div>';
+
+  for (const entry of log) {
+    let texto = '';
+    if (entry.esquivo || entry.daño === 0) {
+      texto = `<span class="esquiva">${entry.atacante_nombre} falló el golpe</span>`;
+    } else {
+      texto = `<span class="${entry.critico ? 'critico' : 'danio'}">${entry.atacante_nombre} ${entry.accion} a ${entry.defensor_nombre} -${entry.daño}HP</span>`;
+    }
+    const entryEl = document.createElement('div');
+    entryEl.className = 'log-entry';
+    entryEl.innerHTML = `⚔️ ${texto}`;
+    logEl.appendChild(entryEl);
+  }
+
+  const resultadoEl = document.getElementById('resultado');
+  if (resultadoEl) {
+    resultadoEl.classList.remove('hidden');
+    if (result.resultado === 'victoria') {
+      resultadoEl.className = 'resultado-combate victoria';
+      resultadoEl.innerHTML = `🏆 ¡VICTORIA! +2 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
+    } else {
+      resultadoEl.className = 'resultado-combate derrota';
+      resultadoEl.innerHTML = `💀 DERROTA +1 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
+    }
+  }
+
+  const btnVolver = document.getElementById('btn-volver-arena');
+  if (btnVolver) btnVolver.classList.remove('hidden');
 }
 
 function delay(ms) {
