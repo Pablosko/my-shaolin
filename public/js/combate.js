@@ -2,6 +2,12 @@ let shaolinId = null;
 let oponenteSeleccionado = null;
 let modoBot = false;
 let miShaolinInfo = null;
+let miHpMax = 0;
+let opHpMax = 0;
+let rangoActual = 3;
+
+const RANGO_NOMBRE = ['Contacto', 'Corta', 'Media', 'Guardia', 'Larga'];
+const RANGO_PX = [0, 1, 2, 3, 4];
 
 async function loadArena() {
   const params = new URLSearchParams(window.location.search);
@@ -32,7 +38,8 @@ async function loadArena() {
       weaponsEl.innerHTML = miShaolinInfo.armas.map(a => `<span class="reserva-item">🗡️ ${a.nombre}</span>`).join('');
     }
 
-    actualizarBarraHP('mi', miShaolinInfo.hp, miShaolinInfo.max_hp);
+    miHpMax = miShaolinInfo.max_hp;
+    actualizarBarraHP('mi', miShaolinInfo.hp, miHpMax);
 
     const hoy = new Date().toISOString().split('T')[0];
     const restantes = 500 - (miShaolinInfo.ultimo_combate === hoy ? miShaolinInfo.combates_hoy : 0);
@@ -68,15 +75,14 @@ async function cargarOponentes() {
       listEl.innerHTML = `
         <div class="card" style="text-align:center;grid-column:1/-1">
           <div style="font-size:48px;margin-bottom:12px">😴</div>
-          <div style="color:#8b6fa0;margin-bottom:16px">No hay guerreros disponibles en la arena...</div>
-          <button class="btn btn-combatir" onclick="cargarBots()">🤖 Generar bots de práctica</button>
+          <div style="color:#8b6fa0;margin-bottom:16px">No hay guerreros disponibles...</div>
+          <button class="btn btn-combatir" onclick="cargarBots()">🤖 Generar bots</button>
         </div>
       `;
       return;
     }
 
     listEl.innerHTML = '';
-
     oponentes.forEach(op => {
       const card = crearCardOponente(op);
       listEl.appendChild(card);
@@ -84,7 +90,7 @@ async function cargarOponentes() {
 
     const botBtn = document.createElement('div');
     botBtn.style.cssText = 'grid-column:1/-1;text-align:center;margin-top:12px';
-    botBtn.innerHTML = `<button class="btn btn-secundario" onclick="cargarBots()">🤖 O practicar contra bots</button>`;
+    botBtn.innerHTML = `<button class="btn btn-secundario" onclick="cargarBots()">🤖 Practicar contra bots</button>`;
     listEl.appendChild(botBtn);
   } catch (err) {
     if (err.message.includes('Token')) { logout(); }
@@ -94,8 +100,7 @@ async function cargarOponentes() {
 
 async function cargarBots() {
   const listEl = document.getElementById('oponentes-lista');
-  listEl.innerHTML = '<div style="text-align:center;color:#8b6fa0;grid-column:1/-1">Generando guerreros de práctica...</div>';
-
+  listEl.innerHTML = '<div style="text-align:center;color:#8b6fa0;grid-column:1/-1">Generando...</div>';
   try {
     const bots = await API.get('/arena/bots');
     listEl.innerHTML = '';
@@ -104,14 +109,12 @@ async function cargarBots() {
       listEl.appendChild(card);
     });
   } catch (err) {
-    alert('Error al generar bots: ' + err.message);
+    alert('Error: ' + err.message);
   }
 }
 
 function crearCardOponente(op) {
   const esBot = op.id < 0;
-  const avatar = op.genero === 'femenino' ? '👩' : '👨';
-
   const card = document.createElement('div');
   card.className = 'oponente-card';
   card.innerHTML = `
@@ -144,7 +147,7 @@ async function iniciarCombate(oponente, esBot = false) {
     opWeaponsEl.innerHTML = oponente.armas.map(a => `<span class="reserva-item">🗡️ ${a.nombre}</span>`).join('');
   }
 
-  const opHpMax = oponente.max_hp || oponente.hp;
+  opHpMax = oponente.max_hp || oponente.hp;
   actualizarBarraHP('op', opHpMax, opHpMax);
 
   document.getElementById('log-combate').innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Preparando combate...</div>';
@@ -153,16 +156,9 @@ async function iniciarCombate(oponente, esBot = false) {
 
   try {
     const body = { shaolin_id: shaolinId };
-    if (modoBot) {
-      body.oponente_data = oponente;
-    }
+    if (modoBot) body.oponente_data = oponente;
     const result = await API.post(`/arena/combatir/${oponente.id}`, body);
-
-    if (result.tiene_nivel_pendiente) {
-      // auto-refresh in background
-    }
-
-    renderResultadoVisual(result);
+    renderCombate(result);
   } catch (err) {
     alert('Error en combate: ' + err.message);
     document.getElementById('seleccion-oponentes').classList.remove('hidden');
@@ -170,251 +166,204 @@ async function iniciarCombate(oponente, esBot = false) {
   }
 }
 
-async function renderResultadoVisual(result) {
+async function renderCombate(result) {
   const log = result.log;
   const logEl = document.getElementById('log-combate');
   const miNombre = miShaolinInfo.name;
-  const miHpMax = miShaolinInfo.max_hp;
-  const opHpMax = oponenteSeleccionado.max_hp || oponenteSeleccionado.hp;
   const miCol = document.getElementById('luchador-mi');
   const opCol = document.getElementById('luchador-op');
-  let hpMiActual = miHpMax;
-  let hpOpActual = opHpMax;
+  const paMiEl = document.getElementById('pa-mi-valor');
+  const paOpEl = document.getElementById('pa-op-valor');
+  const rangoInd = document.getElementById('rango-indicator');
 
   logEl.innerHTML = '';
-  document.getElementById('mi-equipada').classList.add('hidden');
-  document.getElementById('op-equipada').classList.add('hidden');
+  rangoActual = 3;
+  actualizarPosicion(miCol, opCol, rangoActual);
 
-  function quitarAnimaciones() {
-    document.querySelectorAll('.luchador-col').forEach(c => {
-      c.classList.remove('atacando-der', 'atacando-izq', 'golpeado', 'flash-critico', 'anim-victoria', 'anim-derrota');
-    });
+  function actualizarPosicion(l, r, rango) {
+    l.style.setProperty('--pos', rango);
+    r.style.setProperty('--pos', rango);
   }
 
-  for (let i = 0; i < log.length; i++) {
-    const entry = log[i];
-    await delay(900);
-
-    if (entry.type === 'draw') {
-      const esMiPersonaje = entry.nombre === miNombre;
-      const columna = esMiPersonaje ? miCol : opCol;
-      mostrarFloat(columna, '🗡️', '#fbbf24', 1.8);
-      const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
-      const equipadaEl = document.getElementById(equipadaId);
-      equipadaEl.innerHTML = `⚔️ ${entry.arma}`;
-      equipadaEl.classList.remove('hidden');
-      const entryEl = document.createElement('div');
-      entryEl.className = 'log-entry';
-      entryEl.innerHTML = `<span class="info">🗡️ ${entry.nombre} sacó ${entry.arma}</span>`;
-      logEl.appendChild(entryEl);
-      logEl.scrollTop = logEl.scrollHeight;
-      continue;
-    }
-
-    if (entry.type === 'drop') {
-      const esMiPersonaje = entry.nombre === miNombre;
-      const columna = esMiPersonaje ? miCol : opCol;
-      mostrarFloat(columna, '💔', '#ef4444', 1.5);
-      const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
-      document.getElementById(equipadaId).classList.add('hidden');
-      const entryEl = document.createElement('div');
-      entryEl.className = 'log-entry';
-      entryEl.innerHTML = `<span class="danio">💔 ${entry.nombre} perdió su ${entry.arma}</span>`;
-      logEl.appendChild(entryEl);
-      logEl.scrollTop = logEl.scrollHeight;
-      continue;
-    }
-
-    if (entry.type === 'switch') {
-      const esMiPersonaje = entry.nombre === miNombre;
-      const columna = esMiPersonaje ? miCol : opCol;
-      mostrarFloat(columna, '🔄', '#fbbf24', 1.5);
-      const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
-      const equipadaEl = document.getElementById(equipadaId);
-      equipadaEl.innerHTML = `⚔️ ${entry.arma_nueva}`;
-      equipadaEl.classList.remove('hidden');
-      const entryEl = document.createElement('div');
-      entryEl.className = 'log-entry';
-      entryEl.innerHTML = `<span class="info">🔄 ${entry.nombre} cambió ${entry.arma_vieja} por ${entry.arma_nueva}</span>`;
-      logEl.appendChild(entryEl);
-      logEl.scrollTop = logEl.scrollHeight;
-      continue;
-    }
-
-    const esMiAtacante = entry.atacante_nombre === miNombre;
-    const atacanteCol = esMiAtacante ? miCol : opCol;
-    const defensorCol = esMiAtacante ? opCol : miCol;
-
-    if (esMiAtacante) {
-      hpOpActual = entry.hp_defensor;
-      hpMiActual = entry.hp_atacante;
-    } else {
-      hpMiActual = entry.hp_defensor;
-      hpOpActual = entry.hp_atacante;
-    }
-
-    quitarAnimaciones();
-    atacanteCol.classList.add(esMiAtacante ? 'atacando-der' : 'atacando-izq');
-
-    if (entry.usaArma && entry.nombreArma) {
-      mostrarFloat(atacanteCol, '🗡️', '#fbbf24', 1.8);
-      const equipadaId = esMiAtacante ? 'mi-equipada' : 'op-equipada';
-      const equipadaEl = document.getElementById(equipadaId);
-      equipadaEl.innerHTML = `⚔️ ${entry.nombreArma}`;
-      equipadaEl.classList.remove('hidden');
-    }
-
-    await delay(350);
-
-    if (entry.esquivo || entry.daño === 0) {
-      mostrarFloat(defensorCol, 'ESQUIVA!', '#60a5fa', 1.2);
-    } else {
-      const color = entry.critico ? '#f59e0b' : '#ef4444';
-      const icono = entry.critico ? '🔥 ' : '';
-      mostrarFloat(defensorCol, `${icono}-${entry.daño}`, color, entry.critico ? 1.5 : 1);
-      if (entry.critico) {
-        defensorCol.classList.add('flash-critico');
-      }
-    }
-
-    defensorCol.classList.add('golpeado');
-    actualizarBarraHP('mi', hpMiActual, miHpMax);
-    actualizarBarraHP('op', hpOpActual, opHpMax);
-
-    await delay(500);
-    quitarAnimaciones();
-
-    if (entry.contraataca && entry.daño_contra > 0) {
-      await delay(300);
-      defensorCol.classList.add(esMiAtacante ? 'atacando-izq' : 'atacando-der');
-      mostrarFloat(atacanteCol, `⚡-${entry.daño_contra}`, '#f97316');
-      await delay(400);
-      defensorCol.classList.remove('atacando-izq', 'atacando-der');
-    }
-
-    if (entry.robo_vida > 0) {
-      mostrarFloat(atacanteCol, `💚 +${entry.robo_vida}`, '#34d399');
-    }
-
-    let texto = '';
-    if (entry.esquivo || entry.daño === 0) {
-      texto = `<span class="esquiva">${entry.atacante_nombre} falló el golpe</span>`;
-    } else {
-      const armaTexto = entry.usaArma && entry.nombreArma ? ` con ${entry.nombreArma}` : ' con puños';
-      texto = `<span class="${entry.critico ? 'critico' : 'danio'}">${entry.atacante_nombre} ${entry.accion} a ${entry.defensor_nombre} -${entry.daño}HP${armaTexto}</span>`;
-    }
-    if (entry.contraataca && entry.daño_contra > 0) {
-      texto += `<br><span class="danio">⚡ ${entry.defensor_nombre} contraataca -${entry.daño_contra}HP</span>`;
-    }
-    if (entry.robo_vida > 0) {
-      texto += `<br><span class="danio" style="color:#34d399">💚 ${entry.atacante_nombre} robó ${entry.robo_vida}HP</span>`;
-    }
-
-    const entryEl = document.createElement('div');
-    entryEl.className = 'log-entry';
-    entryEl.innerHTML = `⚔️ ${texto}`;
-    logEl.appendChild(entryEl);
-    logEl.scrollTop = logEl.scrollHeight;
+  function mostrarFloat(el, texto, color, escala = 1) {
+    const f = document.createElement('div');
+    f.className = 'float-dmg';
+    f.textContent = texto;
+    f.style.color = color;
+    f.style.setProperty('--escala', escala);
+    el.appendChild(f);
+    setTimeout(() => f.remove(), 1000);
   }
-
-  await delay(600);
-
-  const resultadoEl = document.getElementById('resultado');
-  resultadoEl.classList.remove('hidden');
-
-  if (result.resultado === 'victoria') {
-    resultadoEl.className = 'resultado-combate victoria';
-    resultadoEl.innerHTML = `
-      🏆 ¡VICTORIA! +2 XP
-      ${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}
-    `;
-    miCol.classList.add('anim-victoria');
-    opCol.classList.add('anim-derrota');
-  } else {
-    resultadoEl.className = 'resultado-combate derrota';
-    resultadoEl.innerHTML = `
-      💀 DERROTA +1 XP
-      ${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}
-    `;
-    opCol.classList.add('anim-victoria');
-    miCol.classList.add('anim-derrota');
-  }
-
-  if (result.tiene_nivel_pendiente) {
-    const msg = document.createElement('div');
-    msg.style.cssText = 'margin-top:12px;padding:12px;background:rgba(245,158,11,0.15);border:1px solid #f59e0b;border-radius:8px;text-align:center';
-    msg.innerHTML = `⬆️ ¡Tienes un nivel pendiente! <a href="/shaolin.html?id=${shaolinId}" class="btn btn-primario" style="display:inline-block;margin-left:8px;padding:4px 16px;font-size:14px">Subir nivel</a>`;
-    resultadoEl.appendChild(msg);
-  }
-
-  document.getElementById('btn-volver-arena').classList.remove('hidden');
-}
-
-function mostrarFloat(columna, texto, color, escala = 1) {
-  const el = document.createElement('div');
-  el.className = 'float-dmg';
-  el.textContent = texto;
-  el.style.color = color;
-  el.style.setProperty('--escala', escala);
-  columna.appendChild(el);
-  setTimeout(() => el.remove(), 1200);
-}
-
-async function renderResultadoDirecto(result) {
-  const log = result.log;
-  const logEl = document.getElementById('log-combate');
-
-  logEl.innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Resultado del combate</div>';
 
   for (const entry of log) {
-    if (entry.type === 'draw') {
-      const entryEl = document.createElement('div');
-      entryEl.className = 'log-entry';
-      entryEl.innerHTML = `<span class="info">🗡️ ${entry.nombre} sacó ${entry.arma}</span>`;
-      logEl.appendChild(entryEl);
-      continue;
-    }
-    if (entry.type === 'drop') {
-      const entryEl = document.createElement('div');
-      entryEl.className = 'log-entry';
-      entryEl.innerHTML = `<span class="danio">💔 ${entry.nombre} perdió su ${entry.arma}</span>`;
-      logEl.appendChild(entryEl);
-      continue;
-    }
-    if (entry.type === 'switch') {
-      const entryEl = document.createElement('div');
-      entryEl.className = 'log-entry';
-      entryEl.innerHTML = `<span class="info">🔄 ${entry.nombre} cambió ${entry.arma_vieja} por ${entry.arma_nueva}</span>`;
-      logEl.appendChild(entryEl);
-      continue;
-    }
-    let texto = '';
-    if (entry.esquivo || entry.daño === 0) {
-      texto = `<span class="esquiva">${entry.atacante_nombre} falló el golpe</span>`;
-    } else {
-      const armaTexto = entry.usaArma && entry.nombreArma ? ` con ${entry.nombreArma}` : ' con puños';
-      texto = `<span class="${entry.critico ? 'critico' : 'danio'}">${entry.atacante_nombre} ${entry.accion} a ${entry.defensor_nombre} -${entry.daño}HP${armaTexto}</span>`;
-    }
-    const entryEl = document.createElement('div');
-    entryEl.className = 'log-entry';
-    entryEl.innerHTML = `⚔️ ${texto}`;
-    logEl.appendChild(entryEl);
-  }
+    const esMi = entry.actor === miNombre || entry.atacante_nombre === miNombre || entry.target === miNombre;
+    const esMiPersonaje = entry.actor === miNombre || entry.nombre === miNombre || entry.atacante_nombre === miNombre;
 
-  const resultadoEl = document.getElementById('resultado');
-  if (resultadoEl) {
-    resultadoEl.classList.remove('hidden');
-    if (result.resultado === 'victoria') {
-      resultadoEl.className = 'resultado-combate victoria';
-      resultadoEl.innerHTML = `🏆 ¡VICTORIA! +2 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
-    } else {
-      resultadoEl.className = 'resultado-combate derrota';
-      resultadoEl.innerHTML = `💀 DERROTA +1 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
-    }
-  }
+    switch (entry.type) {
+      case 'combat_start':
+        rangoActual = entry.rango;
+        actualizarPosicion(miCol, opCol, rangoActual);
+        rangoInd.textContent = `Rango ${entry.rango} · ${entry.rangoNombre}`;
+        break;
 
-  const btnVolver = document.getElementById('btn-volver-arena');
-  if (btnVolver) btnVolver.classList.remove('hidden');
+      case 'turn_start':
+        await delay(300);
+        break;
+
+      case 'pa':
+        if (esMiPersonaje) {
+          paMiEl.textContent = entry.pa;
+        } else {
+          paOpEl.textContent = entry.pa;
+        }
+        break;
+
+      case 'draw_weapon':
+      case 'switch_weapon': {
+        await delay(200);
+        const col = esMiPersonaje ? miCol : opCol;
+        const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
+        const eq = document.getElementById(equipadaId);
+        if (entry.type === 'switch_weapon') {
+          mostrarFloat(col, '🔄', '#fbbf24', 1.2);
+          eq.innerHTML = `⚔️ ${entry.arma_nueva}`;
+          addLog(logEl, `<span class="info">🔄 ${entry.actor} cambió ${entry.arma_vieja} por ${entry.arma_nueva}</span>`);
+        } else {
+          mostrarFloat(col, '🗡️', '#fbbf24', 1.3);
+          eq.innerHTML = `⚔️ ${entry.arma}`;
+          addLog(logEl, `<span class="info">🗡️ ${entry.actor} sacó ${entry.arma}</span>`);
+        }
+        eq.classList.remove('hidden');
+        break;
+      }
+
+      case 'move': {
+        await delay(300);
+        const col = esMiPersonaje ? miCol : opCol;
+        const dir = !esMiPersonaje;
+        if (dir) col.classList.add('atacando-izq');
+        else col.classList.add('atacando-der');
+        await delay(300);
+        rangoActual = entry.to;
+        actualizarPosicion(miCol, opCol, rangoActual);
+        rangoInd.textContent = `Rango ${entry.to} · ${RANGO_NOMBRE[entry.to]}`;
+        col.classList.remove('atacando-izq', 'atacando-der');
+        addLog(logEl, `<span class="info">${entry.actor} avanza</span>`);
+        await delay(200);
+        break;
+      }
+
+      case 'hit':
+      case 'critical_hit': {
+        await delay(200);
+        const atkCol = esMi ? miCol : opCol;
+        const defCol = esMi ? opCol : miCol;
+        const atkDir = esMi;
+        atkCol.classList.add(atkDir ? 'atacando-der' : 'atacando-izq');
+        await delay(250);
+
+        const esCrit = entry.type === 'critical_hit';
+        const color = esCrit ? '#f59e0b' : '#ef4444';
+        const icono = esCrit ? '🔥 ' : '';
+        mostrarFloat(defCol, `${icono}-${entry.damage}`, color, esCrit ? 1.5 : 1);
+        defCol.classList.add('golpeado');
+        if (esCrit) defCol.classList.add('flash-critico');
+
+        const armaTxt = entry.conArma && entry.nombreArma ? ` con ${entry.nombreArma}` : '';
+        const critTxt = esCrit ? ' 🔥 ¡CRÍTICO!' : '';
+        addLog(logEl, `<span class="${esCrit ? 'critico' : 'danio'}">${entry.actor} ${entry.accion} a ${entry.target} -${entry.damage}HP${armaTxt}${critTxt}</span>`);
+
+        atkCol.classList.remove('atacando-der', 'atacando-izq');
+        break;
+      }
+
+      case 'miss': {
+        await delay(200);
+        const atkCol = esMi ? miCol : opCol;
+        atkCol.classList.add(esMi ? 'atacando-der' : 'atacando-izq');
+        await delay(250);
+        atkCol.classList.remove('atacando-der', 'atacando-izq');
+        addLog(logEl, `<span class="esquiva">${entry.actor} falló</span>`);
+        break;
+      }
+
+      case 'dodge': {
+        await delay(100);
+        addLog(logEl, `<span class="esquiva">${entry.actor} esquivó</span>`);
+        break;
+      }
+
+      case 'counter_hit': {
+        const col = esMi ? miCol : opCol;
+        const targetCol = esMi ? opCol : miCol;
+        mostrarFloat(col, `⚡-${entry.damage}`, '#f97316', 1.2);
+        targetCol.classList.add('golpeado');
+        addLog(logEl, `<span class="danio">⚡ ${entry.actor} contraataca -${entry.damage}HP</span>`);
+        break;
+      }
+
+      case 'drop_weapon': {
+        const col = esMiPersonaje ? miCol : opCol;
+        mostrarFloat(col, '💔', '#ef4444', 1.3);
+        const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
+        document.getElementById(equipadaId).classList.add('hidden');
+        addLog(logEl, `<span class="danio">💔 ${entry.actor} perdió su ${entry.arma}</span>`);
+        break;
+      }
+
+      case 'life_steal':
+        addLog(logEl, `<span style="color:#34d399">💚 ${entry.actor} robó ${entry.amount}HP</span>`);
+        break;
+
+      case 'hp_update': {
+        const lado = entry.actor === miNombre ? 'mi' : 'op';
+        const maxHp = lado === 'mi' ? miHpMax : opHpMax;
+        actualizarBarraHP(lado, entry.hp, maxHp);
+        break;
+      }
+
+      case 'exposed':
+        addLog(logEl, `<span style="color:#f97316">⚠️ ${entry.mensaje}</span>`);
+        break;
+
+      case 'combat_end':
+        await delay(400);
+        const resultadoEl = document.getElementById('resultado');
+        resultadoEl.classList.remove('hidden');
+        if (entry.winner === miShaolinInfo.id) {
+          resultadoEl.className = 'resultado-combate victoria';
+          resultadoEl.innerHTML = `🏆 ¡VICTORIA! +2 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
+          miCol.classList.add('anim-victoria');
+          opCol.classList.add('anim-derrota');
+        } else {
+          resultadoEl.className = 'resultado-combate derrota';
+          resultadoEl.innerHTML = `💀 DERROTA +1 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
+          opCol.classList.add('anim-victoria');
+          miCol.classList.add('anim-derrota');
+        }
+        if (result.tiene_nivel_pendiente) {
+          const msg = document.createElement('div');
+          msg.style.cssText = 'margin-top:12px;padding:12px;background:rgba(245,158,11,0.15);border:1px solid #f59e0b;border-radius:8px;text-align:center';
+          msg.innerHTML = `⬆️ ¡Nivel pendiente! <a href="/shaolin.html?id=${shaolinId}" class="btn btn-primario" style="display:inline-block;margin-left:8px;padding:4px 16px;font-size:14px">Subir nivel</a>`;
+          resultadoEl.appendChild(msg);
+        }
+        document.getElementById('btn-volver-arena').classList.remove('hidden');
+        break;
+
+      default:
+        break;
+    }
+
+    await delay(300);
+  }
+}
+
+function addLog(logEl, html) {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `⚔️ ${html}`;
+  logEl.appendChild(entry);
+  logEl.scrollTop = logEl.scrollHeight;
 }
 
 function delay(ms) {
