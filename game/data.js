@@ -1,16 +1,91 @@
+const FAMILIES = ['puño', 'dao', 'jian', 'gun', 'shuanggou', 'fei_biao'];
+const TIERS = ['hierro', 'acero', 'acero_fino', 'mitril', 'mitril_superior', 'mitril_maestro'];
+
+const familyMatrix = {
+  puño:       { puño: 1.0, dao: 0.8, jian: 0.7, gun: 0.9, shuanggou: 0.8, fei_biao: 0.6 },
+  dao:        { puño: 0.9, dao: 1.0, jian: 0.8, gun: 0.7, shuanggou: 0.9, fei_biao: 0.8 },
+  jian:       { puño: 0.8, dao: 0.9, jian: 1.0, gun: 0.8, shuanggou: 0.7, fei_biao: 0.9 },
+  gun:        { puño: 1.0, dao: 0.7, jian: 0.8, gun: 1.0, shuanggou: 0.8, fei_biao: 0.6 },
+  shuanggou:  { puño: 0.9, dao: 0.9, jian: 0.7, gun: 0.8, shuanggou: 1.0, fei_biao: 0.7 },
+  fei_biao:   { puño: 0.7, dao: 0.8, jian: 0.9, gun: 0.6, shuanggou: 0.7, fei_biao: 1.0 },
+};
+
+const RANGO_EFICACIA = {
+  puño:       [1.0, 0.8, 0.5, 0.3, 0.1],
+  dao:        [0.8, 1.0, 0.7, 0.4, 0.2],
+  jian:       [0.6, 0.8, 1.0, 0.7, 0.3],
+  gun:        [0.3, 0.6, 0.9, 1.0, 0.5],
+  shuanggou:  [0.7, 1.0, 0.8, 0.5, 0.2],
+  fei_biao:   [0.1, 0.3, 0.6, 0.9, 1.0],
+};
+
+const FAMILIA_BLOCK = {
+  puño:       { freq: 25, efficacy: 0.25 },
+  dao:        { freq: 20, efficacy: 0.20 },
+  jian:       { freq: 15, efficacy: 0.15 },
+  gun:        { freq: 15, efficacy: 0.15 },
+  shuanggou:  { freq: 25, efficacy: 0.20 },
+  fei_biao:   { freq: 5,  efficacy: 0.05 },
+};
+
+const FAMILIA_DODGE = {
+  puño: 25, dao: 10, jian: 15,
+  gun: 5, shuanggou: 20, fei_biao: 30,
+};
+
+const FAMILIA_BLOCKABILITY = {
+  puño: 20, dao: 30, jian: 25,
+  gun: 35, shuanggou: 20, fei_biao: 10,
+};
+
+const FAMILIA_WEAPON_SPEED = {
+  puño: 1.2, dao: 0.9, jian: 1.0,
+  gun: 0.7, shuanggou: 1.1, fei_biao: 1.3,
+};
+
+const FAMILIA_RANGO_IDEAL = {
+  puño: 0, dao: 1, jian: 2, gun: 3, shuanggou: 1, fei_biao: 3,
+};
+
 const armas = [
-  { nombre: 'Cuchillo', tipo: 'corto', dano_min: 6, dano_max: 10 },
-  { nombre: 'Espadón', tipo: 'pesado', dano_min: 9, dano_max: 15 },
-  { nombre: 'Maza', tipo: 'contundente', dano_min: 8, dano_max: 14 },
-  { nombre: 'Hacha', tipo: 'pesado', dano_min: 10, dano_max: 16 },
-  { nombre: 'Látigo', tipo: 'corto', dano_min: 5, dano_max: 10 },
-  { nombre: 'Shuriken', tipo: 'corto', dano_min: 4, dano_max: 8 },
-  { nombre: 'Sai', tipo: 'corto', dano_min: 5, dano_max: 9 },
-  { nombre: 'Mangual', tipo: 'contundente', dano_min: 8, dano_max: 14 },
-  { nombre: 'Martillo', tipo: 'contundente', dano_min: 10, dano_max: 17 },
-  { nombre: 'Lanza', tipo: 'pesado', dano_min: 7, dano_max: 13 },
-  { nombre: 'Cimitarra', tipo: 'pesado', dano_min: 8, dano_max: 14 },
-  { nombre: 'Alabarda', tipo: 'pesado', dano_min: 9, dano_max: 15 },
+  // === PUÑO (6) ===
+  { nombre: 'Puño', familia: 'puño', tier: 'hierro', dano_min: 2, dano_max: 4, drawCost: 0 },
+  { nombre: 'Puño de Hierro', familia: 'puño', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 0 },
+  { nombre: 'Puño de Acero', familia: 'puño', tier: 'acero', dano_min: 4, dano_max: 8, drawCost: 0 },
+  { nombre: 'Puño de Acero Fino', familia: 'puño', tier: 'acero_fino', dano_min: 5, dano_max: 10, drawCost: 0 },
+  { nombre: 'Puño de Mitril', familia: 'puño', tier: 'mitril', dano_min: 7, dano_max: 13, drawCost: 0 },
+  { nombre: 'Puño de Mitril Maestro', familia: 'puño', tier: 'mitril_maestro', dano_min: 9, dano_max: 17, drawCost: 0 },
+  // === DAO (6) ===
+  { nombre: 'Cuchillo', familia: 'dao', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
+  { nombre: 'Daga', familia: 'dao', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 50 },
+  { nombre: 'Cimitarra', familia: 'dao', tier: 'acero', dano_min: 6, dano_max: 11, drawCost: 50 },
+  { nombre: 'Hacha', familia: 'dao', tier: 'acero_fino', dano_min: 8, dano_max: 14, drawCost: 50 },
+  { nombre: 'Sable', familia: 'dao', tier: 'mitril', dano_min: 10, dano_max: 16, drawCost: 50 },
+  { nombre: 'Dao de Mitril Maestro', familia: 'dao', tier: 'mitril_maestro', dano_min: 12, dano_max: 19, drawCost: 50 },
+  // === JIAN (6) ===
+  { nombre: 'Espada Corta', familia: 'jian', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
+  { nombre: 'Sai', familia: 'jian', tier: 'hierro', dano_min: 3, dano_max: 7, drawCost: 50 },
+  { nombre: 'Espadón', familia: 'jian', tier: 'acero', dano_min: 7, dano_max: 13, drawCost: 50 },
+  { nombre: 'Espada Larga', familia: 'jian', tier: 'acero_fino', dano_min: 8, dano_max: 14, drawCost: 50 },
+  { nombre: 'Jian de Mitril', familia: 'jian', tier: 'mitril', dano_min: 9, dano_max: 16, drawCost: 50 },
+  { nombre: 'Jian de Mitril Maestro', familia: 'jian', tier: 'mitril_maestro', dano_min: 11, dano_max: 20, drawCost: 50 },
+  // === GUN (6) ===
+  { nombre: 'Bastón', familia: 'gun', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
+  { nombre: 'Mangual', familia: 'gun', tier: 'acero', dano_min: 6, dano_max: 11, drawCost: 50 },
+  { nombre: 'Lanza', familia: 'gun', tier: 'acero', dano_min: 5, dano_max: 10, drawCost: 50 },
+  { nombre: 'Alabarda', familia: 'gun', tier: 'acero_fino', dano_min: 7, dano_max: 13, drawCost: 50 },
+  { nombre: 'Gun de Mitril', familia: 'gun', tier: 'mitril', dano_min: 9, dano_max: 16, drawCost: 50 },
+  { nombre: 'Gun de Mitril Maestro', familia: 'gun', tier: 'mitril_maestro', dano_min: 10, dano_max: 18, drawCost: 50 },
+  // === SHUANGGOU (3) ===
+  { nombre: 'Látigo', familia: 'shuanggou', tier: 'acero', dano_min: 5, dano_max: 10, drawCost: 50 },
+  { nombre: 'Gancho', familia: 'shuanggou', tier: 'acero', dano_min: 5, dano_max: 9, drawCost: 50 },
+  { nombre: 'Shuanggou de Mitril', familia: 'shuanggou', tier: 'mitril', dano_min: 8, dano_max: 14, drawCost: 50 },
+  // === FEI BIAO (3) ===
+  { nombre: 'Shuriken', familia: 'fei_biao', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 50 },
+  { nombre: 'Fei Biao de Acero', familia: 'fei_biao', tier: 'acero', dano_min: 4, dano_max: 8, drawCost: 50 },
+  // === LEGACY (2) — se mantienen por compatibilidad, mapeadas a familia cercana ===
+  { nombre: 'Maza', familia: 'puño', tier: 'acero', dano_min: 8, dano_max: 14, drawCost: 50 },
+  { nombre: 'Martillo', familia: 'puño', tier: 'acero_fino', dano_min: 10, dano_max: 17, drawCost: 50 },
 ];
 
 const habilidades = [
@@ -42,6 +117,15 @@ function getRandomArma() {
   return { ...getRandomItem(armas) };
 }
 
+const familiaToTipo = {
+  puño: 'corto',
+  dao: 'pesado',
+  jian: 'pesado',
+  gun: 'pesado',
+  shuanggou: 'corto',
+  fei_biao: 'corto',
+};
+
 function resolverArma(armaDb) {
   if (!armaDb) return null;
   const t = armas.find(a => a.nombre === armaDb.nombre);
@@ -49,9 +133,12 @@ function resolverArma(armaDb) {
   const bonus = ((armaDb.nivel || 1) - 1);
   return {
     ...armaDb,
-    tipo: t.tipo,
+    tipo: familiaToTipo[t.familia] || 'corto',
+    familia: t.familia,
+    tier: t.tier,
     dano_min: t.dano_min + bonus,
     dano_max: t.dano_max + bonus,
+    drawCost: t.drawCost || 50,
   };
 }
 
@@ -387,6 +474,61 @@ function generarStatsOpcionesNivel() {
   });
 }
 
+function getArmaStatsCompletas(nombre) {
+  const t = armas.find(a => a.nombre === nombre);
+  if (!t) return null;
+  return {
+    ...t,
+    tipo: familiaToTipo[t.familia] || 'corto',
+    rangeEficacia: RANGO_EFICACIA[t.familia] || [0.5, 0.5, 0.5, 0.5, 0.5],
+    blockFreq: FAMILIA_BLOCK[t.familia]?.freq || 10,
+    blockEfficacy: FAMILIA_BLOCK[t.familia]?.efficacy || 0.10,
+    dodgeability: FAMILIA_DODGE[t.familia] || 10,
+    blockability: FAMILIA_BLOCKABILITY[t.familia] || 20,
+    weaponSpeed: FAMILIA_WEAPON_SPEED[t.familia] || 1.0,
+    rangoIdeal: FAMILIA_RANGO_IDEAL[t.familia] || 1,
+  };
+}
+
+function calcularVelocidadEfectiva(velocidad, weaponSpeed) {
+  return Math.floor(velocidad * (weaponSpeed || 1));
+}
+
+function eficaciaRango(familia, rango) {
+  const curva = RANGO_EFICACIA[familia];
+  if (!curva) return 0.5;
+  return curva[Math.min(Math.max(0, rango), 4)] ?? 0.5;
+}
+
+function modificadorTier(tierBlk, tierAtk) {
+  const idxBlk = TIERS.indexOf(tierBlk);
+  const idxAtk = TIERS.indexOf(tierAtk);
+  if (idxBlk === -1 || idxAtk === -1) return 1;
+  const diff = idxAtk - idxBlk;
+  if (diff >= 2) return 1.3;
+  if (diff === 1) return 1.15;
+  if (diff === 0) return 1;
+  if (diff === -1) return 0.85;
+  return 0.7;
+}
+
+function ventajaRelativa(a, b) {
+  const denom = Math.max(a, b) || 1;
+  return (a - b) / denom;
+}
+
+function getFamiliaBlock(familia) {
+  return FAMILIA_BLOCK[familia] || { freq: 10, efficacy: 0.10 };
+}
+
+function getFamiliaDodge(familia) {
+  return FAMILIA_DODGE[familia] || 10;
+}
+
+function getFamiliaWeaponSpeed(familia) {
+  return FAMILIA_WEAPON_SPEED[familia] || 1.0;
+}
+
 module.exports = {
   armas, habilidades, calcularMaxHp,
   getRandomArma, getRandomHabilidad, resolverArma,
@@ -395,4 +537,13 @@ module.exports = {
   generarOpcionesIniciales,
   calcularQi, aplicarSkillsYQi, getValorHabilidadPorNivel,
   generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel,
+  // Nuevo sistema de combate
+  FAMILIES, TIERS,
+  familyMatrix, RANGO_EFICACIA,
+  FAMILIA_BLOCK, FAMILIA_DODGE, FAMILIA_BLOCKABILITY,
+  FAMILIA_WEAPON_SPEED, FAMILIA_RANGO_IDEAL,
+  getArmaStatsCompletas, calcularVelocidadEfectiva,
+  eficaciaRango, modificadorTier, ventajaRelativa,
+  getFamiliaBlock, getFamiliaDodge, getFamiliaWeaponSpeed,
+  familiaToTipo,
 };

@@ -346,9 +346,39 @@ async function renderCombate(result) {
         break;
       }
 
-      case 'dodge': {
+      case 'dodge':
+      case 'dodge_attempt': {
+        addLog(logEl, `<span class="esquiva">🦵 ${entry.actor} intenta esquivar</span>`);
+        break;
+      }
+
+      case 'dodge_success': {
         await delay(100);
-        addLog(logEl, `<span class="esquiva">${entry.actor} esquivó</span>`);
+        addLog(logEl, `<span class="esquiva">💨 ${entry.actor} esquivó el ataque</span>`);
+        break;
+      }
+
+      case 'block_attempt': {
+        addLog(logEl, `<span style="color:#94a3b8">🛡️ ${entry.actor} intenta bloquear</span>`);
+        break;
+      }
+
+      case 'block_success': {
+        addLog(logEl, `<span style="color:#60a5fa">🛡️ Bloqueo: ${entry.efficacy || '?'}% eficacia, daño reducido a ${entry.damageReduced}</span>`);
+        break;
+      }
+
+      case 'glancing_hit': {
+        await delay(150);
+        const defCol = esMi ? opCol : miCol;
+        defCol.classList.add('golpeado');
+        mostrarFloat(defCol, `🛡️-${entry.damage}`, '#60a5fa', 0.9);
+        addLog(logEl, `<span style="color:#60a5fa">🛡️ ${entry.actor} ${entry.accion} a ${entry.target} (bloqueado) -${entry.damage}HP</span>`);
+        break;
+      }
+
+      case 'counter_attempt': {
+        addLog(logEl, `<span style="color:#f97316">⚡ ${entry.actor} contraataca</span>`);
         break;
       }
 
@@ -382,7 +412,11 @@ async function renderCombate(result) {
       }
 
       case 'exposed':
-        addLog(logEl, `<span style="color:#f97316">⚠️ ${entry.mensaje}</span>`);
+        addLog(logEl, `<span style="color:#f97316">⚠️ ${entry.actor || ''} expuesto en rango ${entry.rango} - defensa reducida</span>`);
+        break;
+
+      case 'range_change':
+        addLog(logEl, `<span style="color:#8b6fa0">↔ Rango ${entry.rango} · ${entry.nombre || RANGO_NOMBRE[entry.rango]}</span>`);
         break;
 
       case 'combat_end':
