@@ -1358,14 +1358,15 @@ input:focus, select:focus {
   border: 1px solid #4a3060;
   border-radius: 12px;
   margin: 16px 20px 0;
-  padding: 0 20px;
+  padding: 0 12px;
   position: sticky;
   top: 0;
   z-index: 100;
   display: flex;
   align-items: center;
-  height: 56px;
-  gap: 12px;
+  height: 52px;
+  gap: 8px;
+  flex-wrap: nowrap;
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
 }
 
@@ -1392,8 +1393,8 @@ input:focus, select:focus {
 .search-bar-container {
   position: relative;
   flex-shrink: 1;
-  min-width: 160px;
-  max-width: 280px;
+  min-width: 140px;
+  max-width: 200px;
 }
 
 .search-bar-container input {

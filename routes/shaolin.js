@@ -28,10 +28,10 @@ router.get('/public/:name', async (req, res) => {
   shaolin.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);
   shaolin.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
 
-  const wins = await db.get('SELECT COUNT(*) as count FROM combates WHERE winner_id = ?', [shaolin.id]);
-  const total = await db.get('SELECT COUNT(*) as count FROM combates WHERE shaolin1_id = ? OR shaolin2_id = ?', [shaolin.id, shaolin.id]);
-  shaolin.wins = wins.count;
-  shaolin.total_combates = total.count;
+  const wRow = await db.get('SELECT COUNT(*) as count FROM combates WHERE winner_id = ?', [shaolin.id]);
+  const tRow = await db.get('SELECT COUNT(*) as count FROM combates WHERE shaolin1_id = ? OR shaolin2_id = ?', [shaolin.id, shaolin.id]);
+  shaolin.wins = wRow ? wRow.count : 0;
+  shaolin.total_combates = tRow ? tRow.count : 0;
 
   const qiData = aplicarSkillsYQi(shaolin);
   Object.assign(shaolin, qiData);

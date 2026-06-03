@@ -19,10 +19,6 @@ class AppHeader {
     container.innerHTML = `
       <a href="/dashboard.html" class="header-logo">🥋 My Shaolin</a>
       ${token && username ? `<span class="header-username">👤 ${escapeHtml(username)}</span>` : ''}
-      <div class="search-bar-container">
-        <input type="text" id="header-search" placeholder="Buscar guerrero..." autocomplete="off">
-        <div class="search-results" id="search-results"></div>
-      </div>
       <div class="header-rankings-wrap">
         <button class="header-rankings-btn" id="rankings-btn">🏆 Ranking</button>
         <div class="rankings-dropdown" id="rankings-dropdown">
@@ -31,6 +27,10 @@ class AppHeader {
         </div>
       </div>
       <div class="header-right">
+        <div class="search-bar-container">
+          <input type="text" id="header-search" placeholder="Buscar guerrero..." autocomplete="off">
+          <div class="search-results" id="search-results"></div>
+        </div>
         ${qaHtml}
         ${token ? `<a href="/dashboard.html" class="header-nav-btn">📋 Mis guerreros</a>` : ''}
         ${token ? `<button class="header-logout-btn" id="header-logout" title="Salir">🚪</button>` : `<a href="/" class="header-nav-btn">Iniciar sesión</a>`}

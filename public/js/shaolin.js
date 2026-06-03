@@ -56,7 +56,6 @@ async function loadShaolin() {
     const xpNeeded = 6 + b.level * 2;
     const xpPercent = Math.min(100, (b.xp / xpNeeded) * 100);
 
-    document.getElementById('shaolin-title').textContent = b.name;
     document.getElementById('shaolin-name-display').textContent = b.name;
     document.getElementById('shaolin-level').textContent = `Nivel ${b.level}`;
     const avatarEl = document.getElementById('shaolin-avatar');

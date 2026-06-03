@@ -94,11 +94,13 @@ async function loadBase() {
     }
 
   } catch (err) {
+    console.error('Base load error:', err);
     main.innerHTML = `
       <div class="not-found-page">
         <div class="nf-icon">💀</div>
         <div class="nf-title">Error del destino</div>
-        <div class="nf-sub">Los dioses del templo están confundidos. Intenta de nuevo más tarde.</div>
+        <div class="nf-sub">${err.message}</div>
+        <p style="color:#6a3a8a;font-size:12px;margin-top:16px">Los dioses del templo están confundidos. Intenta de nuevo más tarde.</p>
       </div>
     `;
   }
