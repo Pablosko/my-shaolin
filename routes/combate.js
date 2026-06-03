@@ -98,10 +98,10 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
     armas: b1Armas,
     habilidades: b1Habilidades,
     qi: b1Qi.qi,
-    fuerza: b1Qi.baseFuerza,
-    agilidad: b1Qi.baseAgilidad,
-    velocidad: b1Qi.baseVelocidad,
-    max_hp: b1Qi.baseMaxHp,
+    fuerza: b1Qi.real_fuerza,
+    agilidad: b1Qi.real_agilidad,
+    velocidad: b1Qi.real_velocidad,
+    max_hp: b1Qi.real_max_hp,
   };
 
   const b2Completo = {
@@ -109,10 +109,10 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
     armas: b2Armas,
     habilidades: b2Habilidades,
     qi: b2Qi.qi,
-    fuerza: b2Qi.baseFuerza,
-    agilidad: b2Qi.baseAgilidad,
-    velocidad: b2Qi.baseVelocidad,
-    max_hp: b2Qi.baseMaxHp,
+    fuerza: b2Qi.real_fuerza,
+    agilidad: b2Qi.real_agilidad,
+    velocidad: b2Qi.real_velocidad,
+    max_hp: b2Qi.real_max_hp,
   };
 
   async function onPerderArma(shaolinId, armaId) {

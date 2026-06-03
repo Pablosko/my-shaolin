@@ -308,7 +308,7 @@ function generarRecompensaUnica() {
   const valor = stat === 'vitalidad' ? 2 : 1;
   const iconos = { fuerza: '💪', agilidad: '🏃', velocidad: '⚡', vitalidad: '🛡️' };
   const labels = { fuerza: 'Fuerza', agilidad: 'Agilidad', velocidad: 'Velocidad', vitalidad: 'Vitalidad' };
-  const descStat = stat === 'vitalidad' ? `+${valor} Vitalidad (+${valor * 5} HP)` : `+${valor} ${labels[stat]}`;
+  const descStat = stat === 'vitalidad' ? `+${valor} Vitalidad (+${valor * 3} HP)` : `+${valor} ${labels[stat]}`;
   return {
     tipo: 'stat',
     icono: iconos[stat],
@@ -347,7 +347,7 @@ function generarStatsOpcionesNivel() {
     }
     const icono = s === 'fuerza' ? '💪' : s === 'agilidad' ? '🏃' : s === 'velocidad' ? '⚡' : '🛡️';
     const label = s === 'vitalidad' ? 'Vitalidad' : s.charAt(0).toUpperCase() + s.slice(1);
-    const descHp = s === 'vitalidad' ? ` (+${valor * 5} HP)` : '';
+    const descHp = s === 'vitalidad' ? ` (+${valor * 3} HP)` : '';
     return { stat: s, valor, rareza, icono, label, descHp };
   });
 }

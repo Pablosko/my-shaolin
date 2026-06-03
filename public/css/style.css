@@ -1165,3 +1165,92 @@ input:focus, select:focus {
 .mt-20 { margin-top: 20px; }
 .mb-12 { margin-bottom: 12px; }
 .mb-20 { margin-bottom: 20px; }
+
+/* Armas grid mural */
+.armas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.arma-card {
+  position: relative;
+  background: rgba(30, 15, 50, 0.5);
+  border: 1px solid #4a3060;
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: default;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.arma-card:hover {
+  border-color: #8b5cf6;
+  transform: translateY(-2px);
+  z-index: 10;
+}
+
+.arma-card-icono {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.arma-card-nombre {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.arma-card-nivel {
+  font-size: 11px;
+  color: #fbbf24;
+  margin-bottom: 2px;
+}
+
+.arma-card-dano {
+  font-size: 12px;
+  color: #8b6fa0;
+}
+
+/* Tooltip por hover */
+.arma-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 8, 28, 0.97);
+  border: 1px solid #6a3a8a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+}
+
+.arma-card:hover .arma-tooltip {
+  display: block;
+}
+
+.arma-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.arma-tooltip-row.actual {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.arma-tooltip-row.pasado {
+  color: #8b6fa0;
+  opacity: 0.6;
+}
+
+.arma-tooltip-row.futuro {
+  color: #4a3060;
+  opacity: 0.35;
+}

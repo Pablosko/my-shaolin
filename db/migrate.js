@@ -26,6 +26,16 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('armas_drop_stats')`);
     console.log('Migration armas_drop_stats: dropped tipo/dano_min/dano_max, added nivel');
   }
+
+  const vitalResult = await client.execute(`SELECT name FROM _migrations WHERE name = 'vitalidad_nerf_v3'`);
+  if (vitalResult.rows.length === 0) {
+    await client.execute(`UPDATE shaolins SET hp = hp - vitalidad * 2, max_hp = max_hp - vitalidad * 2 WHERE vitalidad > 0`);
+    await client.execute(`UPDATE shaolins SET hp = 1 WHERE hp < 1`);
+    await client.execute(`UPDATE shaolins SET max_hp = 1 WHERE max_hp < 1`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'vitalidad_nerf_v3'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('vitalidad_nerf_v3')`);
+    console.log('Migration vitalidad_nerf_v3: vitalidad now gives +3 HP instead of +5');
+  }
 }
 
 module.exports = { runMigrations };

@@ -10,9 +10,8 @@
 ### Bugs / Issues conocidos
 
 - [ ] **Draw de arma no consume PA** — La doc dice 50 PA, pero en `engine.js:intentarDibujar()` se llama sin gastar PA
-- [ ] **No hay penalización de exposed** — El evento `exposed` solo es informativo, debería aplicar `-20%` a defensa (según doc)
+- [ ] **No hay penalización de exposed** — El evento `exposed` solo es informativo, debería aplicar `-20%` a defensa
 - [ ] **ProcesarActor no reacciona** — El turno loop permite hasta 4 ataques si hay PA, pero si se queda sin PA en medio de un move, sigue (break condicional)
-- [ ] **Límite de 50 turnos raramente se alcanza** — El bucle principal corre 50 turnos pero en la práctica el combate termina antes por HP
 
 ### Mecánicas faltantes (documentadas pero no implementadas)
 
@@ -89,6 +88,10 @@
 | 2026-06-03 | Easter egg Artego7: +4 XP (2×) |
 | 2026-06-03 | Bots escalan por nivel con rewards simulados |
 | 2026-06-03 | HP universal: +2/level aplicado automáticamente |
+| 2026-06-03 | Vitalidad nerf: +3 HP por punto, migración retroactiva (vitalidad_nerf_v3) |
+| 2026-06-03 | Combate: stats con Qi (real_fuerza/agilidad/velocidad/max_hp), sin doble skill |
+| 2026-06-03 | Armas: grid mural con tooltip hover (daño Nv.1/2/3), sin badge equipada |
+| 2026-06-03 | Vitalidad: sin barra segmentada (solo número como HP) |
 | 2026-06-02 | Fase 2 completa: rangos 0-4, PA, movimiento, IA básica |
 | 2026-06-02 | Armas persistentes: draw 33%, swap 30%, drop 1-5% |
 | 2026-06-02 | Barras de stats: 10 segmentos coloreados 1→verde 10→rojo |

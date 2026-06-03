@@ -67,7 +67,7 @@ Máximo **500 combates** por día por shaolin.
 | 💪 Fuerza | Barra 10 segmentos | Daño físico |
 | 🏃 Agilidad | Barra 10 segmentos | Precisión, esquiva, defensa |
 | ⚡ Velocidad | Barra 10 segmentos | PA/turno, iniciativa, crítico |
-| 🛡️ Vitalidad | Barra 10 segmentos | +5 HP por punto |
+| 🛡️ Vitalidad | Solo número | +3 HP por punto |
 
 ### 2.2 Visualización de barras
 

@@ -106,8 +106,7 @@ function renderStats(b) {
   renderSegBar('velocidad-segbar', velocidad);
 
   const vitalidad = b.vitalidad || 0;
-  document.getElementById('vitalidad-text').innerHTML = `🛡️ ${vitalidad} (+${vitalidad * 5} HP)`;
-  renderSegBar('vitalidad-segbar', vitalidad);
+  document.getElementById('vitalidad-text').innerHTML = `🛡️ ${vitalidad} (+${vitalidad * 3} HP)`;
 
   const xpNeeded = 6 + b.level * 2;
   const xpPercent = Math.min(100, (b.xp / xpNeeded) * 100);
@@ -123,14 +122,31 @@ function renderArmas(b) {
     return;
   }
   box.classList.remove('hidden');
-  container.innerHTML = b.armas.map(a => `
-    <div class="item-row ${a.equipada ? 'item-equipada' : ''}">
-      <span class="item-icono">🗡️</span>
-      <span class="item-nombre">${a.nombre}</span>
-      <span class="item-info">${a.dano_min}-${a.dano_max} daño</span>
-      ${a.equipada ? '<span class="item-badge equipada">Equipada</span>' : ''}
-    </div>
-  `).join('');
+
+  container.innerHTML = b.armas.map(a => {
+    const bMin = a.dano_min - (a.nivel - 1);
+    const bMax = a.dano_max - (a.nivel - 1);
+    const levels = [1, 2, 3].map(l => ({
+      min: bMin + l - 1,
+      max: bMax + l - 1,
+    }));
+
+    return `
+      <div class="arma-card">
+        <div class="arma-card-icono">🗡️</div>
+        <div class="arma-card-nombre">${a.nombre}</div>
+        <div class="arma-card-nivel">Nv.${a.nivel}</div>
+        <div class="arma-card-dano">${a.dano_min}-${a.dano_max}</div>
+        <div class="arma-tooltip">
+          ${levels.map((lvl, i) => {
+            const n = i + 1;
+            const cls = n === a.nivel ? 'actual' : n < a.nivel ? 'pasado' : 'futuro';
+            return `<div class="arma-tooltip-row ${cls}"><span>Nv.${n}</span><span>${lvl.min}-${lvl.max}</span></div>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderHabilidades(b) {

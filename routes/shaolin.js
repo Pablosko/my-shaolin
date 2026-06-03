@@ -150,7 +150,7 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
     }
   } else if (opcionElegida && opcionElegida.tipo === 'stat') {
     if (opcionElegida.stat === 'vitalidad') {
-      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ? * 5, max_hp = max_hp + ? * 5 WHERE id = ?',
+      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ? * 3, max_hp = max_hp + ? * 3 WHERE id = ?',
         [opcionElegida.valor, opcionElegida.valor, opcionElegida.valor, shaolin.id]);
     } else {
       await db.run(`UPDATE shaolins SET ${opcionElegida.stat} = ${opcionElegida.stat} + ? WHERE id = ?`, [opcionElegida.valor, shaolin.id]);
@@ -159,7 +159,7 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
 
   if (statChoice) {
     if (statChoice.stat === 'vitalidad') {
-      const hpGain = statChoice.valor * 5;
+      const hpGain = statChoice.valor * 3;
       await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ?, max_hp = max_hp + ? WHERE id = ?',
         [statChoice.valor, hpGain, hpGain, shaolin.id]);
     } else {

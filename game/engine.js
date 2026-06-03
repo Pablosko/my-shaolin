@@ -1,20 +1,7 @@
 const { getValorHabilidadPorNivel } = require('./data');
 
-function aplicarSkillsACombate(b) {
-  if (!b.habilidades) return;
-  for (const hab of b.habilidades) {
-    const e = typeof hab.efecto === 'string' ? JSON.parse(hab.efecto) : hab.efecto;
-    const valor = getValorHabilidadPorNivel(hab.efecto, hab.nivel || 1);
-    if (e.stat === 'fuerza_porcentual' && b.statsBase) {
-      b.fuerza = Math.floor(b.statsBase.fuerza * (1 + valor));
-    } else if (e.stat === 'agilidad_porcentual' && b.statsBase) {
-      b.agilidad = Math.floor(b.statsBase.agilidad * (1 + valor));
-    } else if (e.stat === 'velocidad_porcentual' && b.statsBase) {
-      b.velocidad = Math.floor(b.statsBase.velocidad * (1 + valor));
-    } else if (e.stat === 'hp_porcentual' && b.statsBase) {
-      b.max_hp = Math.floor(b.statsBase.max_hp * (1 + valor));
-    }
-  }
+function aplicarSkillsACombate(_b) {
+  // Skills ya aplicadas por routes/combate.js via aplicarSkillsYQi
 }
 
 const MAX_TURNOS = 50;
@@ -65,12 +52,10 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
 
   const c1 = {
     ...b1, hp_actual: b1.max_hp, armas: b1.armas || [], habilidades: b1.habilidades || [],
-    statsBase: { fuerza: b1.fuerza, agilidad: b1.agilidad, velocidad: b1.velocidad, max_hp: b1.max_hp },
     qi: b1.qi || 50, arma_equipada: null,
   };
   const c2 = {
     ...b2, hp_actual: b2.max_hp, armas: b2.armas || [], habilidades: b2.habilidades || [],
-    statsBase: { fuerza: b2.fuerza, agilidad: b2.agilidad, velocidad: b2.velocidad, max_hp: b2.max_hp },
     qi: b2.qi || 50, arma_equipada: null,
   };
 
