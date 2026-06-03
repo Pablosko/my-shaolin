@@ -19,10 +19,10 @@ async function loadShaolins() {
         <div class="shaolin-name">${b.name}</div>
         <div class="shaolin-level">Nivel ${b.level} · ${b.genero === 'femenino' ? '♀' : '♂'}</div>
         <div class="shaolin-stats">
-          <span>❤️ HP <b>${b.hp}/${b.max_hp}</b></span>
-          <span>💪 Fuerza <b>${b.fuerza}</b></span>
-          <span>🏃 Agilidad <b>${b.agilidad}</b></span>
-          <span>⚡ Velocidad <b>${b.velocidad}</b></span>
+          <span>❤️ HP <b>${b.hp}/${b.real_max_hp || b.max_hp}</b></span>
+          <span>💪 Fuerza <b>${b.real_fuerza || b.fuerza}</b></span>
+          <span>🏃 Agilidad <b>${b.real_agilidad || b.agilidad}</b></span>
+          <span>⚡ Velocidad <b>${b.real_velocidad || b.velocidad}</b></span>
         </div>
       `;
       card.querySelector('.shaolin-avatar').appendChild(crearAvatarImg(b.genero, b.skin));
