@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
 const { simularCombate } = require('../game/engine');
-const { generarBots, aplicarSkillsYQi } = require('../game/data');
+const { generarBots, aplicarSkillsYQi, armas: armasData } = require('../game/data');
 
 const router = express.Router();
 
@@ -84,12 +84,20 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
     return res.status(400).json({ error: 'Límite de 500 combates diarios alcanzado' });
   }
 
+  function normalizarDañoArma(w) {
+    const template = armasData.find(a => a.nombre === w.nombre);
+    if (template) {
+      return { ...w, dano_min: template.dano_min, dano_max: template.dano_max };
+    }
+    return w;
+  }
+
   const b1Habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [miShaolin.id]);
-  const b1Armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [miShaolin.id]);
+  const b1Armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [miShaolin.id])).map(normalizarDañoArma);
   const b1Qi = aplicarSkillsYQi({ ...miShaolin, habilidades: b1Habilidades });
 
   const b2Habilidades = oponente.habilidades || [];
-  const b2Armas = oponente.armas || [];
+  const b2Armas = (oponente.armas || []).map(normalizarDañoArma);
   const b2Qi = aplicarSkillsYQi({ ...oponente, habilidades: b2Habilidades });
 
   const b1Completo = {

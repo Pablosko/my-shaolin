@@ -158,7 +158,7 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
 
   function intentarDibujarArma(combat) {
     if (combat.armas.length === 0) return null;
-    const drawChance = Math.min(0.9, 0.3 + combat.velocidad * 0.01);
+    const drawChance = 0.33;
     if (Math.random() < drawChance) {
       return combat.armas.find(a => a.equipada) || combat.armas[0];
     }

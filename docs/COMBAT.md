@@ -256,7 +256,7 @@ probUsarArma = Math.min(0.85, 0.25 + atacante.agilidad * 0.02)
 
 #### Draw por turno
 ```js
-drawChance = min(0.9, 0.3 + velocidad * 0.01)
+drawChance = 0.33  // 33% fijo por turno
 ```
 - Al inicio del turno del combatiente, si no tiene `arma_equipada` y tiene armas en inventario, tira esta probabilidad.
 - Si acierta: se asigna `arma_equipada`, se emite evento `{ type: 'draw', nombre, arma }`.
@@ -278,9 +278,14 @@ probPerder = min(0.05, daño / max_hp * 0.05)
 - **Puño**: `fuerza + (5 + random 0-2)` → 5-7 + fuerza.
 - **Arma**: `fuerza + (dano_min~dano_max)` del arma (ej: Espadón 9-15, Martillo 10-17).
 
+#### Normalización de armas existentes
+- Las armas guardadas en BD con valores viejos se normalizan al cargar el combate.
+- `routes/combate.js`: `normalizarDañoArma()` busca el arma por nombre en `data.js` y sobreescribe `dano_min`/`dano_max`.
+
 #### Implementación
 - `game/engine.js` — `simularCombate()` maneja estado `armaEq1`/`armaEq2`, funciones `intentarDibujarArma()` e `intentarPerderArma()`. `calcularDaño()` recibe `armaEquipada`.
 - `game/data.js` — armas con daño aumentado (6-10 mínimo).
+- `routes/combate.js` — normaliza daño de armas viejas vía `normalizarDañoArma()`.
 - `public/js/combate.js` — `renderResultadoVisual()` y `renderResultadoDirecto()` manejan `type: 'draw'` y `type: 'drop'`.
 
 **Sistema nuevo (especificado arriba):**
