@@ -1354,8 +1354,10 @@ input:focus, select:focus {
 
 /* ===== HEADER GLOBAL ===== */
 .app-header {
-  background: rgba(20, 10, 35, 0.95);
-  border-bottom: 1px solid #4a3060;
+  background: rgba(20, 10, 35, 0.98);
+  border: 1px solid #4a3060;
+  border-radius: 12px;
+  margin: 16px 20px 0;
   padding: 0 20px;
   position: sticky;
   top: 0;
@@ -1363,7 +1365,8 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   height: 56px;
-  gap: 16px;
+  gap: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
 }
 
 .app-header .header-logo {
@@ -1372,16 +1375,25 @@ input:focus, select:focus {
   color: #d4a6ff;
   text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .app-header .header-logo:hover {
   color: #fbbf24;
 }
 
+.header-username {
+  color: #8b6fa0;
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .search-bar-container {
   position: relative;
-  flex: 1;
-  max-width: 360px;
+  flex-shrink: 1;
+  min-width: 160px;
+  max-width: 280px;
 }
 
 .search-bar-container input {

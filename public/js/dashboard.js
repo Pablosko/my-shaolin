@@ -2,9 +2,6 @@ async function loadShaolins() {
   try {
     const shaolins = await API.get('/shaolins');
     const container = document.getElementById('shaolins-container');
-    const username = localStorage.getItem('username');
-
-    document.getElementById('user-name').textContent = username;
 
     container.innerHTML = '';
 

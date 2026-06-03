@@ -4,6 +4,7 @@ class AppHeader {
     if (!container) return;
 
     const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
     const lastShaolin = JSON.parse(localStorage.getItem('lastShaolin') || 'null');
 
     let qaHtml = '';
@@ -17,6 +18,7 @@ class AppHeader {
 
     container.innerHTML = `
       <a href="/dashboard.html" class="header-logo">🥋 My Shaolin</a>
+      ${token && username ? `<span class="header-username">👤 ${escapeHtml(username)}</span>` : ''}
       <div class="search-bar-container">
         <input type="text" id="header-search" placeholder="Buscar guerrero..." autocomplete="off">
         <div class="search-results" id="search-results"></div>
@@ -142,6 +144,12 @@ class AppHeader {
       });
     }
   }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 document.addEventListener('DOMContentLoaded', () => AppHeader.init());
