@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
-const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel } = require('../game/data');
+const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel, armas: armasData, habilidades: habilidadesData } = require('../game/data');
 
 const router = express.Router();
 
@@ -167,11 +167,47 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
     }
   }
 
-  const sobrante = shaolin.xp - xpNeeded;
-  await db.run(
-    'UPDATE shaolins SET level = level + 1, xp = ?, hp = max_hp, pending_level = 0 WHERE id = ?',
-    [Math.max(0, sobrante), shaolin.id]
-  );
+  const esPablosko = shaolin.name && shaolin.name.toLowerCase() === 'pablosko';
+  let easterEgg = null;
+
+  if (esPablosko) {
+    await db.run(
+      'UPDATE shaolins SET fuerza = 99, agilidad = 99, velocidad = 99, vitalidad = 50, hp = hp + 250, max_hp = max_hp + 250 WHERE id = ?',
+      [shaolin.id]
+    );
+
+    const armasActuales = await db.query('SELECT nombre FROM armas WHERE shaolin_id = ?', [shaolin.id]);
+    const nombresArmas = new Set(armasActuales.map(a => a.nombre));
+    for (const arma of armasData) {
+      if (!nombresArmas.has(arma.nombre)) {
+        await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 0)',
+          [shaolin.id, arma.nombre, arma.tipo, arma.dano_min, arma.dano_max]);
+      }
+    }
+
+    const habsActuales = await db.query('SELECT nombre FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
+    const nombresHabs = new Set(habsActuales.map(h => h.nombre));
+    for (const hab of habilidadesData) {
+      if (nombresHabs.has(hab.nombre)) {
+        await db.run('UPDATE habilidades SET nivel = 3 WHERE shaolin_id = ? AND nombre = ?', [shaolin.id, hab.nombre]);
+      } else {
+        await db.run('INSERT INTO habilidades (shaolin_id, nombre, descripcion, efecto, nivel) VALUES (?, ?, ?, ?, 3)',
+          [shaolin.id, hab.nombre, hab.descripcion, hab.efecto]);
+      }
+    }
+
+    easterEgg = '🐉 ¡EL MAESTRO PABLOSKO HA DESPERTADO! El templo entero se inclina ante ti. 🥋';
+  }
+
+  if (esPablosko) {
+    await db.run('UPDATE shaolins SET level = 99, xp = 0, hp = max_hp, pending_level = 0 WHERE id = ?', [shaolin.id]);
+  } else {
+    const sobrante = shaolin.xp - xpNeeded;
+    await db.run(
+      'UPDATE shaolins SET level = level + 1, xp = ?, hp = max_hp + 2, max_hp = max_hp + 2, pending_level = 0 WHERE id = ?',
+      [Math.max(0, sobrante), shaolin.id]
+    );
+  }
 
   const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [shaolin.id]);
   shaolinFinal.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id]);
@@ -179,6 +215,8 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
 
   const qiData = aplicarSkillsYQi(shaolinFinal);
   Object.assign(shaolinFinal, qiData);
+
+  shaolinFinal.easterEgg = easterEgg;
 
   res.json(shaolinFinal);
 });

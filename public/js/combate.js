@@ -102,7 +102,7 @@ async function cargarBots() {
   const listEl = document.getElementById('oponentes-lista');
   listEl.innerHTML = '<div style="text-align:center;color:#8b6fa0;grid-column:1/-1">Generando...</div>';
   try {
-    const bots = await API.get('/arena/bots');
+    const bots = await API.get(`/arena/bots?level=${miShaolinInfo.level}`);
     listEl.innerHTML = '';
     bots.forEach(bot => {
       const card = crearCardOponente(bot);
@@ -346,6 +346,12 @@ async function renderCombate(result) {
           msg.style.cssText = 'margin-top:12px;padding:12px;background:rgba(245,158,11,0.15);border:1px solid #f59e0b;border-radius:8px;text-align:center';
           msg.innerHTML = `⬆️ ¡Nivel pendiente! <a href="/shaolin.html?id=${shaolinId}" class="btn btn-primario" style="display:inline-block;margin-left:8px;padding:4px 16px;font-size:14px">Subir nivel</a>`;
           resultadoEl.appendChild(msg);
+          if (result.shaolin_actualizado && result.shaolin_actualizado.easterEgg) {
+            const egg = document.createElement('div');
+            egg.style.cssText = 'margin-top:12px;padding:16px;background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.05));border:1px solid #f59e0b;border-radius:8px;text-align:center';
+            egg.innerHTML = `<div style="font-size:32px;margin-bottom:8px">🐉</div><div style="color:#fbbf24;font-weight:bold">${result.shaolin_actualizado.easterEggMsg || '🐉 El Maestro ha hablado...'}</div>`;
+            resultadoEl.appendChild(egg);
+          }
         }
         document.getElementById('btn-volver-arena').classList.remove('hidden');
         break;

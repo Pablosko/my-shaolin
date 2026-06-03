@@ -25,7 +25,8 @@ router.get('/oponentes', verificarToken, async (req, res) => {
 });
 
 router.get('/bots', verificarToken, (req, res) => {
-  const bots = generarBots(5);
+  const nivel = parseInt(req.query.level) || 1;
+  const bots = generarBots(5, nivel);
   res.json(bots);
 });
 
@@ -161,7 +162,19 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
     );
   }
 
-  if (resultado.winner_id === miShaolin.id) {
+  const nombre = miShaolin.name || '';
+  const esPablosko = nombre.toLowerCase() === 'pablosko';
+  const esArtego7 = nombre.toLowerCase() === 'artejo7';
+
+  if (esPablosko) {
+    const xpParaSubir = 6 + miShaolin.level * 2;
+    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+      [xpParaSubir, hoy, miShaolin.id]);
+  } else if (esArtego7 && resultado.winner_id === miShaolin.id) {
+    const newXp = miShaolin.xp + 4;
+    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+      [newXp, hoy, miShaolin.id]);
+  } else if (resultado.winner_id === miShaolin.id) {
     const newXp = miShaolin.xp + 2;
     await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
       [newXp, hoy, miShaolin.id]);
@@ -175,12 +188,24 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
   const xpParaSubir = 6 + miShaolinActualizado.level * 2;
 
   let tieneNivelPendiente = false;
-  if (miShaolinActualizado.xp >= xpParaSubir) {
+  if (miShaolinActualizado.xp >= xpParaSubir && miShaolinActualizado.level < 99) {
     await db.run('UPDATE shaolins SET pending_level = 1 WHERE id = ?', [miShaolin.id]);
     tieneNivelPendiente = true;
   }
 
   const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
+
+  let easterEgg = false;
+  let easterEggMsg = '';
+  if (esPablosko && tieneNivelPendiente) {
+    easterEgg = true;
+    easterEggMsg = '🐉 El Maestro Pablosko ha ganado. El templo entero se inclina ante ti. 🥋';
+  } else if (esArtego7 && resultado.winner_id === miShaolin.id) {
+    easterEgg = true;
+    easterEggMsg = '⚡ ¡Artego7 domina el combate! La energía fluye a través de ti. +4 XP ✨';
+  }
+  shaolinFinal.easterEgg = easterEgg;
+  shaolinFinal.easterEggMsg = easterEggMsg;
 
   res.json({
     resultado: resultado.winner_id === miShaolin.id ? 'victoria' : 'derrota',

@@ -304,6 +304,21 @@ async function confirmarLevelUp() {
     renderHabilidades(data);
     document.getElementById('shaolin-level').textContent = `Nivel ${data.level}`;
     checkPendingLevel(data);
+
+    if (data.easterEgg) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;animation:fadeIn 0.5s';
+      const box = document.createElement('div');
+      box.style.cssText = 'background:linear-gradient(135deg,#1a0a2e,#2d1b4e);border:2px solid #f59e0b;border-radius:16px;padding:40px;text-align:center;max-width:500px;box-shadow:0 0 60px rgba(245,158,11,0.3)';
+      box.innerHTML = `
+        <div style="font-size:72px;margin-bottom:16px">🐉</div>
+        <div style="font-size:24px;font-weight:bold;color:#fbbf24;margin-bottom:12px">¡EL MAESTRO HA DESPERTADO!</div>
+        <div style="color:#d4a574;font-size:16px;line-height:1.6">${data.easterEgg}</div>
+        <button onclick="this.closest('div[style]').parentElement.remove()" style="margin-top:20px;padding:8px 24px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-size:16px;cursor:pointer">✨ Continuar</button>
+      `;
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+    }
   } catch (err) {
     alert('Error: ' + err.message);
     btn.disabled = false;

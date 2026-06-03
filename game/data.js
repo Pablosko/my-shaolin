@@ -70,12 +70,34 @@ function randomSkin() {
   return skins[Math.floor(Math.random() * skins.length)];
 }
 
-function generarBot() {
+function generarBot(nivel = 1) {
   const genero = Math.random() < 0.5 ? 'masculino' : 'femenino';
   const stats = generarStatsIniciales(genero);
+  const armas = [];
+  const habilidades = [];
 
-  const arma = Math.random() < 0.4 ? getRandomArma() : null;
-  const habilidad = Math.random() < 0.3 ? getRandomHabilidad() : null;
+  if (Math.random() < 0.4) armas.push({ ...getRandomArma(), equipada: true });
+  if (Math.random() < 0.3) habilidades.push({ ...getRandomHabilidad(), nivel: 1 });
+
+  for (let i = 1; i < nivel; i++) {
+    stats.hp += 2;
+    stats.max_hp += 2;
+
+    const r = Math.random();
+    if (r < 0.40) {
+      const s = ['fuerza', 'agilidad', 'velocidad', 'vitalidad'][Math.floor(Math.random() * 4)];
+      if (s === 'vitalidad') { stats.hp += 10; stats.max_hp += 10; }
+      else stats[s]++;
+    } else if (r < 0.70) {
+      const a = getRandomArma();
+      if (!armas.find(x => x.nombre === a.nombre)) armas.push({ ...a, equipada: false });
+    } else {
+      const h = getRandomHabilidad();
+      const existing = habilidades.find(x => x.nombre === h.nombre);
+      if (existing) existing.nivel = Math.min(3, (existing.nivel || 1) + 1);
+      else habilidades.push({ ...h, nivel: 1 });
+    }
+  }
 
   return {
     id: -Math.floor(Math.random() * 10000) - 1,
@@ -83,7 +105,7 @@ function generarBot() {
     name: getRandomItem(nombresBot),
     genero,
     skin: randomSkin(),
-    level: 1,
+    level: nivel,
     xp: 0,
     hp: stats.hp,
     max_hp: stats.max_hp,
@@ -96,19 +118,19 @@ function generarBot() {
     pending_level: 0,
     created_at: new Date().toISOString(),
     username: '🤖 Bot',
-    armas: arma ? [{ ...arma, equipada: true }] : [],
-    habilidades: habilidad ? [{ ...habilidad, nivel: 1 }] : [],
+    armas,
+    habilidades,
   };
 }
 
-function generarBots(cantidad) {
+function generarBots(cantidad, nivel = 1) {
   const bots = [];
   const usados = new Set();
   for (let i = 0; i < cantidad; i++) {
-    let bot = generarBot();
+    let bot = generarBot(nivel);
     let intentos = 0;
     while (usados.has(bot.name) && intentos < 10) {
-      bot = generarBot();
+      bot = generarBot(nivel);
       intentos++;
     }
     usados.add(bot.name);
