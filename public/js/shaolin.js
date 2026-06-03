@@ -89,25 +89,33 @@ function renderQi(b) {
   else fill.style.background = '#f59e0b';
 }
 
+function setStatGroupTitle(id, title) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.title = title;
+  const group = el.closest('.stat-group');
+  if (group) group.title = title;
+}
+
 function renderStats(b) {
   const hpNum = b.real_max_hp || b.max_hp;
   const hpBase = 50 + (b.vitalidad || 0) * 3 + b.level * 2;
   document.getElementById('hp-text').innerHTML = `❤️ ${hpNum}`;
-  document.getElementById('hp-text').title = `HP base = 50 + ${b.vitalidad||0}×3 + ${b.level}×2 = ${hpBase}\nLuego × habilidades de HP% × Qi`;
+  setStatGroupTitle('hp-text', `HP base = 50 + ${b.vitalidad||0}×3 + ${b.level}×2 = ${hpBase}\nLuego × habilidades de HP% × Qi`);
 
   const fuerza = b.real_fuerza || b.fuerza;
   document.getElementById('fuerza-text').innerHTML = `💪 ${formatStatDiff(b.baseFuerza || b.fuerza, fuerza)}`;
-  document.getElementById('fuerza-text').title = 'Daño puño = floor(Fue×0.3) + rand(5-7)\nDaño arma = Fue + dañoArma\nCrítico = daño × 1.5';
+  setStatGroupTitle('fuerza-text', 'Daño puño = floor(Fue×0.3) + rand(5-7)\nDaño arma = Fue + dañoArma\nCrítico = daño × 1.5');
   renderSegBar('fuerza-segbar', fuerza);
 
   const agilidad = b.real_agilidad || b.agilidad;
   document.getElementById('agilidad-text').innerHTML = `🏃 ${formatStatDiff(b.baseAgilidad || b.agilidad, agilidad)}`;
-  document.getElementById('agilidad-text').title = 'Precisión = clamp(0.20, 0.98, 0.85 + (agiAtk - agiDef) × 0.02)\nEsquiva base = 10% + habilidades';
+  setStatGroupTitle('agilidad-text', 'Precisión = clamp(0.20, 0.98, 0.85 + (agiAtk - agiDef) × 0.02)\nEsquiva base = 10% + habilidades');
   renderSegBar('agilidad-segbar', agilidad);
 
   const velocidad = b.real_velocidad || b.velocidad;
   document.getElementById('velocidad-text').innerHTML = `⚡ ${formatStatDiff(b.baseVelocidad || b.velocidad, velocidad)}`;
-  document.getElementById('velocidad-text').title = 'PA/turno = clamp(100, 250, 100 + floor(sqrt(Vel) × 12))\nIniciativa: mayor Vel ataca primero\nCrítico = Vel × 1% + habilidades';
+  setStatGroupTitle('velocidad-text', 'PA/turno = clamp(100, 250, 100 + floor(sqrt(Vel) × 12))\nIniciativa: mayor Vel ataca primero\nCrítico = Vel × 1% + habilidades');
   renderSegBar('velocidad-segbar', velocidad);
 
   const xpNeeded = 6 + b.level * 2;
@@ -193,6 +201,7 @@ function renderHabilidades(b) {
         <div class="hab-card-icono">✨</div>
         <div class="hab-card-nombre">${h.nombre}</div>
         <div class="hab-card-nivel">Nv.${h.nivel || 1}</div>
+        <div class="hab-card-desc">${h.descripcion || ''}</div>
         <div class="hab-card-efecto">${efectoActual}</div>
         <div class="hab-tooltip">
           ${levels.map((text, i) => {
