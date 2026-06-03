@@ -21,6 +21,54 @@ router.post('/opciones', verificarToken, (req, res) => {
   res.json({ opciones });
 });
 
+router.get('/public/:name', async (req, res) => {
+  const shaolin = await db.get('SELECT s.*, u.username FROM shaolins s JOIN users u ON s.user_id = u.id WHERE LOWER(s.name) = LOWER(?)', [req.params.name]);
+  if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
+
+  shaolin.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);
+  shaolin.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
+
+  const wins = await db.get('SELECT COUNT(*) as count FROM combates WHERE winner_id = ?', [shaolin.id]);
+  const total = await db.get('SELECT COUNT(*) as count FROM combates WHERE shaolin1_id = ? OR shaolin2_id = ?', [shaolin.id, shaolin.id]);
+  shaolin.wins = wins.count;
+  shaolin.total_combates = total.count;
+
+  const qiData = aplicarSkillsYQi(shaolin);
+  Object.assign(shaolin, qiData);
+
+  res.json(shaolin);
+});
+
+router.get('/ranking', async (req, res) => {
+  const shaolins = await db.query(`
+    SELECT s.*, u.username,
+      (SELECT COUNT(*) FROM combates WHERE winner_id = s.id) as wins,
+      (SELECT COUNT(*) FROM combates WHERE shaolin1_id = s.id OR shaolin2_id = s.id) as total
+    FROM shaolins s
+    JOIN users u ON s.user_id = u.id
+    ORDER BY s.level DESC, wins DESC
+    LIMIT 10
+  `);
+
+  const result = await Promise.all(shaolins.map(async b => {
+    const qiData = aplicarSkillsYQi(b);
+    return { ...b, ...qiData };
+  }));
+
+  res.json(result);
+});
+
+router.get('/search', async (req, res) => {
+  const q = req.query.q || '';
+  if (!q.trim()) return res.json([]);
+
+  const shaolins = await db.query(
+    'SELECT s.*, u.username FROM shaolins s JOIN users u ON s.user_id = u.id WHERE s.name LIKE ? LIMIT 10',
+    [`%${q}%`]
+  );
+  res.json(shaolins);
+});
+
 router.get('/:id', verificarToken, async (req, res) => {
   const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
   if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });

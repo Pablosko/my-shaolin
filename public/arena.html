@@ -7,28 +7,37 @@
   <link rel="stylesheet" href="/css/style.css?v=6">
 </head>
 <body>
-  <div class="header">
-    <h1>🥋 My Shaolin - Arena</h1>
-    <div class="user-info">
-      <a href="/dashboard.html" class="btn btn-secundario">⬅ Volver</a>
-      <button id="logout-btn" class="btn btn-secundario">Salir</button>
-    </div>
-  </div>
+  <div id="app-header"></div>
 
   <div class="container">
     <div id="seleccion-oponentes">
       <div class="card">
-        <h2>⚔️ Elige un oponente</h2>
-        <p style="color:#8b6fa0;margin-bottom:16px">Combates disponibles hoy: <span id="combates-restantes">500</span> / 500</p>
+        <h2>⚔️ Arena</h2>
+        <p style="color:#8b6fa0;margin-bottom:8px">
+          Combates normales dan XP, cuentan para el límite diario.
+          Entrenamiento no da XP pero puedes pelear con quien quieras.
+        </p>
+
+        <div class="arena-tabs">
+          <button class="arena-tab active" data-tab="normal">⚔️ Combate Normal</button>
+          <button class="arena-tab" data-tab="entreno">🥋 Entrenamiento</button>
+        </div>
+
+        <div id="combates-restantes-box" style="color:#8b6fa0;margin-bottom:12px">
+          Combates disponibles hoy: <span id="combates-restantes">500</span> / 500
+        </div>
+        <div id="entreno-info" class="hidden" style="color:#34d399;margin-bottom:12px">
+          🥋 Modo entrenamiento — sin límite diario, sin XP
+        </div>
+
         <div id="oponentes-lista" class="oponentes-lista"></div>
       </div>
     </div>
 
     <div id="pantalla-combate" class="hidden">
       <div class="card combate-screen">
-        <h2>⚔️ COMBATE</h2>
+        <h2>⚔️ <span id="combate-mode-label">COMBATE</span></h2>
 
-        <!-- Info bars above battlefield -->
         <div class="combat-info-row">
           <div class="fighter-pa" id="pa-mi"><span class="pa-label">PA:</span> <span class="pa-valor" id="pa-mi-valor">0</span></div>
           <div class="rango-indicator" id="rango-indicator">Rango 3 · Guardia</div>
@@ -75,15 +84,14 @@
 
         <div id="log-combate" class="log-combate"></div>
         <div id="resultado" class="hidden"></div>
-        <div id="btn-volver-arena" class="hidden mt-20">
-          <button class="btn btn-primario" onclick="location.reload()">Volver a la arena</button>
-        </div>
+        <div id="acciones-post-combate" class="hidden post-combat-actions"></div>
       </div>
     </div>
   </div>
 
   <script src="/js/api.js?v=6"></script>
   <script src="/js/auth.js?v=6"></script>
+  <script src="/js/header.js?v=6"></script>
   <script src="/js/combate.js?v=6"></script>
 </body>
 </html>

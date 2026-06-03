@@ -64,6 +64,13 @@ async function loadShaolin() {
     avatarEl.style.borderColor = color;
     avatarEl.appendChild(crearAvatarImg(b.genero, b.skin));
 
+    localStorage.setItem('lastShaolin', JSON.stringify({
+      id: b.id,
+      name: b.name,
+      genero: b.genero,
+      skin: b.skin,
+    }));
+
     renderQi(b);
     renderStats(b);
     renderArmas(b);

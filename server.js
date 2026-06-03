@@ -33,6 +33,10 @@ async function start() {
     res.status(500).json({ error: 'Error interno del servidor' });
   });
 
+  app.get('/base/:name', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'base.html'));
+  });
+
   app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
   });

@@ -7,6 +7,35 @@ const { generarBots, aplicarSkillsYQi, resolverArma } = require('../game/data');
 const router = express.Router();
 
 router.get('/oponentes', verificarToken, async (req, res) => {
+  const level = parseInt(req.query.level) || 0;
+  let shaolins;
+  if (level > 0) {
+    shaolins = await db.query(
+      'SELECT * FROM shaolins WHERE user_id != ? AND level BETWEEN ? AND ?',
+      [req.userId, Math.max(1, level - 3), level + 3]
+    );
+  } else {
+    shaolins = await db.query('SELECT * FROM shaolins WHERE user_id != ?', [req.userId]);
+  }
+
+  const result = await Promise.all(shaolins.map(async b => {
+    const armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id]);
+    const habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [b.id]);
+    const user = await db.get('SELECT username FROM users WHERE id = ?', [b.user_id]);
+    const qiData = aplicarSkillsYQi({ ...b, habilidades });
+    return {
+      ...b,
+      username: user ? user.username : 'Desconocido',
+      armas,
+      habilidades,
+      ...qiData,
+    };
+  }));
+
+  res.json(result);
+});
+
+router.get('/oponentes-todos', verificarToken, async (req, res) => {
   const shaolins = await db.query('SELECT * FROM shaolins WHERE user_id != ?', [req.userId]);
 
   const result = await Promise.all(shaolins.map(async b => {
@@ -51,7 +80,7 @@ router.get('/historial/:shaolin_id', verificarToken, async (req, res) => {
 });
 
 router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
-  const { shaolin_id, oponente_data } = req.body;
+  const { shaolin_id, oponente_data, esEntrenamiento } = req.body;
   const oponente_id = parseInt(req.params.oponente_id);
 
   if (!shaolin_id) {
@@ -67,7 +96,9 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
     return res.status(400).json({ error: 'Debes subir de nivel antes de combatir' });
   }
 
+  const esEntreno = esEntrenamiento === true;
   const esBot = oponente_id < 0;
+  const hoy = new Date().toISOString().split('T')[0];
 
   let oponente;
   if (esBot && oponente_data) {
@@ -84,10 +115,10 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
     return res.status(400).json({ error: 'Datos de bot no proporcionados' });
   }
 
-  const hoy = new Date().toISOString().split('T')[0];
-
-  if (miShaolin.ultimo_combate === hoy && miShaolin.combates_hoy >= 500) {
-    return res.status(400).json({ error: 'Límite de 500 combates diarios alcanzado' });
+  if (!esEntreno) {
+    if (miShaolin.ultimo_combate === hoy && miShaolin.combates_hoy >= 500) {
+      return res.status(400).json({ error: 'Límite de 500 combates diarios alcanzado' });
+    }
   }
 
   const b1Habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [miShaolin.id]);
@@ -152,7 +183,7 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
 
   const resultado = simularCombate(b1Completo, b2Completo, skills1, skills2, onPerderArma);
 
-  if (!esBot) {
+  if (!esBot && !esEntreno) {
     await db.run(
       'INSERT INTO combates (shaolin1_id, shaolin2_id, winner_id, log) VALUES (?, ?, ?, ?)',
       [miShaolin.id, oponente.id, resultado.winner_id, resultado.log]
@@ -163,31 +194,39 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
   const esPablosko = nombre.toLowerCase() === 'pablosko';
   const esArtego7 = nombre.toLowerCase() === 'artego7';
 
-  if (esPablosko) {
-    const xpParaSubir = 6 + miShaolin.level * 2;
-    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
-      [xpParaSubir, hoy, miShaolin.id]);
-  } else if (esArtego7 && resultado.winner_id === miShaolin.id) {
-    const newXp = miShaolin.xp + 4;
-    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
-      [newXp, hoy, miShaolin.id]);
-  } else if (resultado.winner_id === miShaolin.id) {
-    const newXp = miShaolin.xp + 2;
-    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
-      [newXp, hoy, miShaolin.id]);
-  } else {
-    const newXp = miShaolin.xp + 1;
-    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
-      [newXp, hoy, miShaolin.id]);
+  let xpGanada = 0;
+
+  if (!esEntreno) {
+    if (esPablosko) {
+      const xpParaSubir = 6 + miShaolin.level * 2;
+      xpGanada = xpParaSubir;
+      await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+        [xpGanada, hoy, miShaolin.id]);
+    } else if (esArtego7 && resultado.winner_id === miShaolin.id) {
+      xpGanada = 4;
+      await db.run('UPDATE shaolins SET xp = xp + ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+        [xpGanada, hoy, miShaolin.id]);
+    } else if (resultado.winner_id === miShaolin.id) {
+      if (oponente.level >= miShaolin.level) {
+        xpGanada = 2;
+      }
+      await db.run('UPDATE shaolins SET xp = xp + ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+        [xpGanada, hoy, miShaolin.id]);
+    } else {
+      xpGanada = 1;
+      await db.run('UPDATE shaolins SET xp = xp + ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+        [xpGanada, hoy, miShaolin.id]);
+    }
   }
 
-  let miShaolinActualizado = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
-  const xpParaSubir = 6 + miShaolinActualizado.level * 2;
-
   let tieneNivelPendiente = false;
-  if (miShaolinActualizado.xp >= xpParaSubir && miShaolinActualizado.level < 99) {
-    await db.run('UPDATE shaolins SET pending_level = 1 WHERE id = ?', [miShaolin.id]);
-    tieneNivelPendiente = true;
+  if (!esEntreno && !esPablosko) {
+    let miShaolinActualizado = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
+    const xpNeeded = 6 + miShaolinActualizado.level * 2;
+    if (miShaolinActualizado.xp >= xpNeeded && miShaolinActualizado.level < 99) {
+      await db.run('UPDATE shaolins SET pending_level = 1 WHERE id = ?', [miShaolin.id]);
+      tieneNivelPendiente = true;
+    }
   }
 
   const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
@@ -205,12 +244,60 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
   shaolinFinal.easterEggMsg = easterEggMsg;
 
   res.json({
+    oponente_username: !esBot ? (oponente.username || 'Desconocido') : null,
+    oponente_name: oponente.name,
     resultado: resultado.winner_id === miShaolin.id ? 'victoria' : 'derrota',
     winner_id: resultado.winner_id,
     log: JSON.parse(resultado.log),
     shaolin_actualizado: shaolinFinal,
     tiene_nivel_pendiente: tieneNivelPendiente,
+    es_entrenamiento: esEntreno,
+    xp_ganada: xpGanada,
   });
+});
+
+router.post('/random', verificarToken, async (req, res) => {
+  const { shaolin_id, esEntrenamiento } = req.body;
+  const miShaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ?', [shaolin_id, req.userId]);
+  if (!miShaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
+
+  if (esEntrenamiento) {
+    const candidates = await db.query(
+      'SELECT s.*, u.username FROM shaolins s JOIN users u ON s.user_id = u.id WHERE s.id != ? AND s.user_id != ? ORDER BY RANDOM() LIMIT 1',
+      [shaolin_id, req.userId]
+    );
+    if (candidates.length > 0) {
+      const op = candidates[0];
+      op.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [op.id]);
+      op.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [op.id]);
+      const qiData = aplicarSkillsYQi(op);
+      Object.assign(op, qiData);
+      return res.json({ type: 'player', opponent: op });
+    }
+    const [bot] = generarBots(1, miShaolin.level);
+    const qiData = aplicarSkillsYQi(bot);
+    Object.assign(bot, qiData);
+    return res.json({ type: 'bot', opponent: bot });
+  }
+
+  const candidates = await db.query(
+    'SELECT s.*, u.username FROM shaolins s JOIN users u ON s.user_id = u.id WHERE s.id != ? AND s.user_id != ? AND s.level BETWEEN ? AND ? ORDER BY RANDOM() LIMIT 1',
+    [shaolin_id, req.userId, Math.max(1, miShaolin.level - 3), miShaolin.level + 3]
+  );
+
+  if (candidates.length > 0) {
+    const op = candidates[0];
+    op.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [op.id]);
+    op.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [op.id]);
+    const qiData = aplicarSkillsYQi(op);
+    Object.assign(op, qiData);
+    return res.json({ type: 'player', opponent: op });
+  }
+
+  const [bot] = generarBots(1, miShaolin.level);
+  const qiData = aplicarSkillsYQi(bot);
+  Object.assign(bot, qiData);
+  res.json({ type: 'bot', opponent: bot });
 });
 
 module.exports = router;

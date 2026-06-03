@@ -1,13 +1,15 @@
 let shaolinId = null;
 let oponenteSeleccionado = null;
 let modoBot = false;
+let esModoEntreno = false;
 let miShaolinInfo = null;
 let miHpMax = 0;
 let opHpMax = 0;
 let rangoActual = 3;
+let oponenteNameForPost = null;
+let oponenteIdForPost = null;
 
 const RANGO_NOMBRE = ['Contacto', 'Corta', 'Media', 'Guardia', 'Larga'];
-const RANGO_PX = [0, 1, 2, 3, 4];
 
 async function loadArena() {
   const params = new URLSearchParams(window.location.search);
@@ -44,12 +46,37 @@ async function loadArena() {
     const hoy = new Date().toISOString().split('T')[0];
     const restantes = 500 - (miShaolinInfo.ultimo_combate === hoy ? miShaolinInfo.combates_hoy : 0);
     document.getElementById('combates-restantes').textContent = Math.max(0, restantes);
+
+    localStorage.setItem('lastShaolin', JSON.stringify({
+      id: miShaolinInfo.id,
+      name: miShaolinInfo.name,
+      genero: miShaolinInfo.genero,
+      skin: miShaolinInfo.skin,
+    }));
   } catch (err) {
     if (err.message.includes('Token')) { logout(); }
     else { alert('Error: ' + err.message); }
   }
 
+  setupTabs();
   cargarOponentes();
+}
+
+function setupTabs() {
+  const tabs = document.querySelectorAll('.arena-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      esModoEntreno = tab.dataset.tab === 'entreno';
+
+      document.getElementById('combates-restantes-box').classList.toggle('hidden', esModoEntreno);
+      document.getElementById('entreno-info').classList.toggle('hidden', !esModoEntreno);
+
+      cargarOponentes();
+    });
+  });
 }
 
 function actualizarBarraHP(lado, actual, maximo) {
@@ -68,14 +95,19 @@ function actualizarBarraHP(lado, actual, maximo) {
 
 async function cargarOponentes() {
   try {
-    const oponentes = await API.get('/arena/oponentes');
+    let oponentes;
+    if (esModoEntreno) {
+      oponentes = await API.get('/arena/oponentes-todos');
+    } else {
+      oponentes = await API.get(`/arena/oponentes?level=${miShaolinInfo.level}`);
+    }
     const listEl = document.getElementById('oponentes-lista');
 
     if (oponentes.length === 0) {
       listEl.innerHTML = `
         <div class="card" style="text-align:center;grid-column:1/-1">
           <div style="font-size:48px;margin-bottom:12px">😴</div>
-          <div style="color:#8b6fa0;margin-bottom:16px">No hay guerreros disponibles...</div>
+          <div style="color:#8b6fa0;margin-bottom:16px">${esModoEntreno ? 'No hay guerreros disponibles para entrenar...' : 'No hay oponentes de tu nivel...'}</div>
           <button class="btn btn-combatir" onclick="cargarBots()">🤖 Generar bots</button>
         </div>
       `;
@@ -133,9 +165,14 @@ function crearCardOponente(op) {
 async function iniciarCombate(oponente, esBot = false) {
   oponenteSeleccionado = oponente;
   modoBot = esBot;
+  oponenteNameForPost = oponente.name;
+  oponenteIdForPost = oponente.id;
 
   document.getElementById('seleccion-oponentes').classList.add('hidden');
   document.getElementById('pantalla-combate').classList.remove('hidden');
+
+  const label = document.getElementById('combate-mode-label');
+  label.textContent = esModoEntreno ? '🥋 ENTRENAMIENTO' : '⚔️ COMBATE';
 
   document.getElementById('op-nombre').textContent = oponente.name;
   const opAvatarEl = document.getElementById('op-avatar');
@@ -152,18 +189,23 @@ async function iniciarCombate(oponente, esBot = false) {
 
   document.getElementById('log-combate').innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Preparando combate...</div>';
   document.getElementById('resultado').classList.add('hidden');
-  document.getElementById('btn-volver-arena').classList.add('hidden');
+  document.getElementById('acciones-post-combate').classList.add('hidden');
 
   try {
     const body = { shaolin_id: shaolinId };
     if (modoBot) body.oponente_data = oponente;
+    if (esModoEntreno) body.esEntrenamiento = true;
     const result = await API.post(`/arena/combatir/${oponente.id}`, body);
     renderCombate(result);
   } catch (err) {
     alert('Error en combate: ' + err.message);
-    document.getElementById('seleccion-oponentes').classList.remove('hidden');
-    document.getElementById('pantalla-combate').classList.add('hidden');
+    volverArena();
   }
+}
+
+function volverArena() {
+  document.getElementById('seleccion-oponentes').classList.remove('hidden');
+  document.getElementById('pantalla-combate').classList.add('hidden');
 }
 
 async function renderCombate(result) {
@@ -240,8 +282,7 @@ async function renderCombate(result) {
       case 'move': {
         await delay(300);
         const col = esMiPersonaje ? miCol : opCol;
-        const dir = !esMiPersonaje;
-        if (dir) col.classList.add('atacando-izq');
+        if (!esMiPersonaje) col.classList.add('atacando-izq');
         else col.classList.add('atacando-der');
         await delay(300);
         rangoActual = entry.to;
@@ -258,8 +299,7 @@ async function renderCombate(result) {
         await delay(200);
         const atkCol = esMi ? miCol : opCol;
         const defCol = esMi ? opCol : miCol;
-        const atkDir = esMi;
-        atkCol.classList.add(atkDir ? 'atacando-der' : 'atacando-izq');
+        atkCol.classList.add(esMi ? 'atacando-der' : 'atacando-izq');
         await delay(250);
 
         const esCrit = entry.type === 'critical_hit';
@@ -330,20 +370,27 @@ async function renderCombate(result) {
         await delay(400);
         const resultadoEl = document.getElementById('resultado');
         resultadoEl.classList.remove('hidden');
-        const esArtego7 = miShaolinInfo.name && miShaolinInfo.name.toLowerCase() === 'artego7';
         if (entry.winner === miShaolinInfo.id) {
           resultadoEl.className = 'resultado-combate victoria';
-          const xpTexto = esArtego7 ? '+4 XP' : '+2 XP';
-          resultadoEl.innerHTML = `🏆 ¡VICTORIA! ${xpTexto}${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
+          let xpTexto = '';
+          if (result.es_entrenamiento) {
+            xpTexto = '🥋 Entrenamiento';
+          } else if (result.xp_ganada > 0) {
+            xpTexto = `+${result.xp_ganada} XP`;
+          } else {
+            xpTexto = '0 XP (oponente de nivel inferior)';
+          }
+          resultadoEl.innerHTML = `🏆 ¡VICTORIA! ${xpTexto}${result.tiene_nivel_pendiente ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
           miCol.classList.add('anim-victoria');
           opCol.classList.add('anim-derrota');
         } else {
           resultadoEl.className = 'resultado-combate derrota';
-          resultadoEl.innerHTML = `💀 DERROTA +1 XP${result.subio_nivel ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
+          let xpTexto = result.es_entrenamiento ? '🥋 Entrenamiento' : '+1 XP';
+          resultadoEl.innerHTML = `💀 DERROTA ${xpTexto}${result.tiene_nivel_pendiente ? '<div class="level-up mt-12">⬆️ ¡SUBISTE DE NIVEL!</div>' : ''}`;
           opCol.classList.add('anim-victoria');
           miCol.classList.add('anim-derrota');
         }
-        if (result.tiene_nivel_pendiente) {
+        if (result.tiene_nivel_pendiente && !result.es_entrenamiento) {
           const msg = document.createElement('div');
           msg.style.cssText = 'margin-top:12px;padding:12px;background:rgba(245,158,11,0.15);border:1px solid #f59e0b;border-radius:8px;text-align:center';
           msg.innerHTML = `⬆️ ¡Nivel pendiente! <a href="/shaolin.html?id=${shaolinId}" class="btn btn-primario" style="display:inline-block;margin-left:8px;padding:4px 16px;font-size:14px">Subir nivel</a>`;
@@ -355,7 +402,20 @@ async function renderCombate(result) {
           egg.innerHTML = `<div style="font-size:32px;margin-bottom:8px">🐉</div><div style="color:#fbbf24;font-weight:bold">${result.shaolin_actualizado.easterEggMsg || '🐉 El Maestro ha hablado...'}</div>`;
           resultadoEl.appendChild(egg);
         }
-        document.getElementById('btn-volver-arena').classList.remove('hidden');
+
+        // Post-combat actions
+        const accEl = document.getElementById('acciones-post-combate');
+        accEl.classList.remove('hidden');
+        let btnsHtml = `<button class="btn btn-secundario" onclick="volverArena()">⬅ Elegir otro oponente</button>`;
+
+        if (oponenteIdForPost > 0) {
+          btnsHtml += `<button class="btn btn-primario" onclick="window.location.href='/base/${encodeURIComponent(oponenteNameForPost)}'">👤 Visitar base de ${oponenteNameForPost}</button>`;
+        }
+
+        btnsHtml += `<a href="/shaolin.html?id=${shaolinId}" class="btn btn-secundario">📋 Volver a mi base</a>`;
+        btnsHtml += `<button class="btn btn-combatir" onclick="pelearAleatorio()">🎲 Pelear aleatorio</button>`;
+
+        accEl.innerHTML = btnsHtml;
         break;
 
       default:
@@ -363,6 +423,23 @@ async function renderCombate(result) {
     }
 
     await delay(300);
+  }
+}
+
+async function pelearAleatorio() {
+  document.getElementById('acciones-post-combate').classList.add('hidden');
+  document.getElementById('resultado').classList.add('hidden');
+  document.getElementById('log-combate').innerHTML = '<div style="text-align:center;color:#8b6fa0">🎲 Buscando oponente...</div>';
+
+  try {
+    const data = await API.post('/arena/random', {
+      shaolin_id: shaolinId,
+      esEntrenamiento: esModoEntreno,
+    });
+    await iniciarCombate(data.opponent, data.type === 'bot');
+  } catch (err) {
+    alert('Error: ' + err.message);
+    volverArena();
   }
 }
 
