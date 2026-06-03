@@ -1,16 +1,16 @@
 const armas = [
-  { nombre: 'Cuchillo', tipo: 'corto', dano_min: 2, dano_max: 5 },
-  { nombre: 'Espadón', tipo: 'pesado', dano_min: 4, dano_max: 8 },
-  { nombre: 'Maza', tipo: 'contundente', dano_min: 3, dano_max: 7 },
-  { nombre: 'Hacha', tipo: 'pesado', dano_min: 5, dano_max: 9 },
-  { nombre: 'Látigo', tipo: 'corto', dano_min: 2, dano_max: 6 },
-  { nombre: 'Shuriken', tipo: 'corto', dano_min: 1, dano_max: 4 },
-  { nombre: 'Sai', tipo: 'corto', dano_min: 2, dano_max: 5 },
-  { nombre: 'Mangual', tipo: 'contundente', dano_min: 4, dano_max: 8 },
-  { nombre: 'Martillo', tipo: 'contundente', dano_min: 6, dano_max: 10 },
-  { nombre: 'Lanza', tipo: 'pesado', dano_min: 3, dano_max: 7 },
-  { nombre: 'Cimitarra', tipo: 'pesado', dano_min: 4, dano_max: 8 },
-  { nombre: 'Alabarda', tipo: 'pesado', dano_min: 5, dano_max: 9 },
+  { nombre: 'Cuchillo', tipo: 'corto', dano_min: 6, dano_max: 10 },
+  { nombre: 'Espadón', tipo: 'pesado', dano_min: 9, dano_max: 15 },
+  { nombre: 'Maza', tipo: 'contundente', dano_min: 8, dano_max: 14 },
+  { nombre: 'Hacha', tipo: 'pesado', dano_min: 10, dano_max: 16 },
+  { nombre: 'Látigo', tipo: 'corto', dano_min: 5, dano_max: 10 },
+  { nombre: 'Shuriken', tipo: 'corto', dano_min: 4, dano_max: 8 },
+  { nombre: 'Sai', tipo: 'corto', dano_min: 5, dano_max: 9 },
+  { nombre: 'Mangual', tipo: 'contundente', dano_min: 8, dano_max: 14 },
+  { nombre: 'Martillo', tipo: 'contundente', dano_min: 10, dano_max: 17 },
+  { nombre: 'Lanza', tipo: 'pesado', dano_min: 7, dano_max: 13 },
+  { nombre: 'Cimitarra', tipo: 'pesado', dano_min: 8, dano_max: 14 },
+  { nombre: 'Alabarda', tipo: 'pesado', dano_min: 9, dano_max: 15 },
 ];
 
 const habilidades = [

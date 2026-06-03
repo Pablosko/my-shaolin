@@ -252,6 +252,37 @@ probUsarArma = Math.min(0.85, 0.25 + atacante.agilidad * 0.02)
 - `public/arena.html` — estructura con weapon-reserve / weapon-equipada
 - `public/css/style.css` — estilos de armas en combate
 
+### Nuevo sistema de armas (persistente)
+
+#### Draw por turno
+```js
+drawChance = min(0.9, 0.3 + velocidad * 0.01)
+```
+- Al inicio del turno del combatiente, si no tiene `arma_equipada` y tiene armas en inventario, tira esta probabilidad.
+- Si acierta: se asigna `arma_equipada`, se emite evento `{ type: 'draw', nombre, arma }`.
+- Si falla: ataca con puños este turno, reintenta el próximo.
+
+#### Estado persistente
+- Una vez dibujada, el arma permanece equipada indefinidamente.
+- Todos los ataques usan el arma hasta que se pierde.
+
+#### Pérdida de arma
+```js
+probPerder = min(0.05, daño / max_hp * 0.05)
+```
+- Cuando un combatiente recibe daño, ~1-5% de probabilidad de soltar el arma.
+- Se emite `{ type: 'drop', nombre, arma }`.
+- `arma_equipada` vuelve a `null`. Puede volver a dibujar en turnos siguientes.
+
+#### Daño base
+- **Puño**: `fuerza + (5 + random 0-2)` → 5-7 + fuerza.
+- **Arma**: `fuerza + (dano_min~dano_max)` del arma (ej: Espadón 9-15, Martillo 10-17).
+
+#### Implementación
+- `game/engine.js` — `simularCombate()` maneja estado `armaEq1`/`armaEq2`, funciones `intentarDibujarArma()` e `intentarPerderArma()`. `calcularDaño()` recibe `armaEquipada`.
+- `game/data.js` — armas con daño aumentado (6-10 mínimo).
+- `public/js/combate.js` — `renderResultadoVisual()` y `renderResultadoDirecto()` manejan `type: 'draw'` y `type: 'drop'`.
+
 **Sistema nuevo (especificado arriba):**
 - Rangos 0-4
 - PA por turno

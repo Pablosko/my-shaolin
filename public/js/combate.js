@@ -195,6 +195,36 @@ async function renderResultadoVisual(result) {
     const entry = log[i];
     await delay(900);
 
+    if (entry.type === 'draw') {
+      const esMiPersonaje = entry.nombre === miNombre;
+      const columna = esMiPersonaje ? miCol : opCol;
+      mostrarFloat(columna, '🗡️', '#fbbf24', 1.8);
+      const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
+      const equipadaEl = document.getElementById(equipadaId);
+      equipadaEl.innerHTML = `⚔️ ${entry.arma}`;
+      equipadaEl.classList.remove('hidden');
+      const entryEl = document.createElement('div');
+      entryEl.className = 'log-entry';
+      entryEl.innerHTML = `<span class="info">🗡️ ${entry.nombre} sacó ${entry.arma}</span>`;
+      logEl.appendChild(entryEl);
+      logEl.scrollTop = logEl.scrollHeight;
+      continue;
+    }
+
+    if (entry.type === 'drop') {
+      const esMiPersonaje = entry.nombre === miNombre;
+      const columna = esMiPersonaje ? miCol : opCol;
+      mostrarFloat(columna, '💔', '#ef4444', 1.5);
+      const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
+      document.getElementById(equipadaId).classList.add('hidden');
+      const entryEl = document.createElement('div');
+      entryEl.className = 'log-entry';
+      entryEl.innerHTML = `<span class="danio">💔 ${entry.nombre} perdió su ${entry.arma}</span>`;
+      logEl.appendChild(entryEl);
+      logEl.scrollTop = logEl.scrollHeight;
+      continue;
+    }
+
     const esMiAtacante = entry.atacante_nombre === miNombre;
     const atacanteCol = esMiAtacante ? miCol : opCol;
     const defensorCol = esMiAtacante ? opCol : miCol;
@@ -321,6 +351,20 @@ async function renderResultadoDirecto(result) {
   logEl.innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Resultado del combate</div>';
 
   for (const entry of log) {
+    if (entry.type === 'draw') {
+      const entryEl = document.createElement('div');
+      entryEl.className = 'log-entry';
+      entryEl.innerHTML = `<span class="info">🗡️ ${entry.nombre} sacó ${entry.arma}</span>`;
+      logEl.appendChild(entryEl);
+      continue;
+    }
+    if (entry.type === 'drop') {
+      const entryEl = document.createElement('div');
+      entryEl.className = 'log-entry';
+      entryEl.innerHTML = `<span class="danio">💔 ${entry.nombre} perdió su ${entry.arma}</span>`;
+      logEl.appendChild(entryEl);
+      continue;
+    }
     let texto = '';
     if (entry.esquivo || entry.daño === 0) {
       texto = `<span class="esquiva">${entry.atacante_nombre} falló el golpe</span>`;

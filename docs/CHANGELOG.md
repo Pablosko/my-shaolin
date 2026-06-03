@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-03 — Nuevo sistema de armas persistente
+
+### Armas en combate
+- **Draw por turno**: al inicio del turno, si no tiene arma equipada, 30-90% de probabilidad (según velocidad) de sacar un arma.
+- **Estado persistente**: una vez sacada, el arma se usa en **todos** los ataques hasta que se pierde.
+- **Log de "sacó"**: cuando se dibuja el arma, aparece `🗡️ X sacó Y`.
+- **Pérdida de arma**: al recibir daño, ~1-5% de probabilidad de soltar el arma. `💔 X perdió su Y`.
+- **Daño base de puño**: `5-7 + fuerza` (antes solo `fuerza`).
+- **Daño de arma aumentado**: todas las armas tienen daño base más alto (ej: Cuchillo 6-10, Espadón 9-15, Martillo 10-17).
+
+### Archivos modificados
+- `game/engine.js` — persistencia de `arma_equipada`, draw/drop en `simularCombate()`, fist base 5-7
+- `game/data.js` — nuevos valores de daño en `armas[]`
+- `public/js/combate.js` — render de eventos `type: 'draw'` y `type: 'drop'`
+
 ## 2026-06-03 — Mejoras de combate, UI y estabilidad
 
 ### Combate — Armas en UI
