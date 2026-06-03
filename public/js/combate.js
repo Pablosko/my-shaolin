@@ -38,7 +38,7 @@ async function loadArena() {
       weaponsEl.innerHTML = miShaolinInfo.armas.map(a => `<span class="reserva-item">🗡️ ${a.nombre}</span>`).join('');
     }
 
-    miHpMax = miShaolinInfo.max_hp;
+    miHpMax = miShaolinInfo.real_max_hp || miShaolinInfo.max_hp;
     actualizarBarraHP('mi', miShaolinInfo.hp, miHpMax);
 
     const hoy = new Date().toISOString().split('T')[0];
@@ -121,7 +121,7 @@ function crearCardOponente(op) {
     <div class="nombre">${op.name}</div>
     <div class="dueño">${esBot ? '🤖 Bot' : '👤 ' + op.username}</div>
     <div style="font-size:13px;margin-top:8px">
-      Nv.${op.level} · ❤️${op.hp} · 💪${op.fuerza} · 🏃${op.agilidad} · ⚡${op.velocidad}
+      Nv.${op.level} · ❤️${op.real_max_hp || op.max_hp || op.hp} · 💪${op.real_fuerza || op.fuerza} · 🏃${op.real_agilidad || op.agilidad} · ⚡${op.real_velocidad || op.velocidad}
     </div>
     ${op.armas && op.armas.length > 0 ? '<div style="font-size:11px;color:#8b6fa0">🗡️ ' + op.armas.map(a => a.nombre).join(', ') + '</div>' : ''}
     <button class="btn btn-combatir mt-12" style="width:100%">⚔️ Combatir</button>
@@ -147,7 +147,7 @@ async function iniciarCombate(oponente, esBot = false) {
     opWeaponsEl.innerHTML = oponente.armas.map(a => `<span class="reserva-item">🗡️ ${a.nombre}</span>`).join('');
   }
 
-  opHpMax = oponente.max_hp || oponente.hp;
+  opHpMax = oponente.real_max_hp || oponente.max_hp || oponente.hp;
   actualizarBarraHP('op', opHpMax, opHpMax);
 
   document.getElementById('log-combate').innerHTML = '<div style="text-align:center;color:#8b6fa0">⚔️ Preparando combate...</div>';

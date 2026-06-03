@@ -13,11 +13,13 @@ router.get('/oponentes', verificarToken, async (req, res) => {
     const armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id]);
     const habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [b.id]);
     const user = await db.get('SELECT username FROM users WHERE id = ?', [b.user_id]);
+    const qiData = aplicarSkillsYQi({ ...b, habilidades });
     return {
       ...b,
       username: user ? user.username : 'Desconocido',
       armas,
       habilidades,
+      ...qiData,
     };
   }));
 
@@ -26,7 +28,10 @@ router.get('/oponentes', verificarToken, async (req, res) => {
 
 router.get('/bots', verificarToken, (req, res) => {
   const nivel = parseInt(req.query.level) || 1;
-  const bots = generarBots(5, nivel);
+  const bots = generarBots(5, nivel).map(b => {
+    const qiData = aplicarSkillsYQi(b);
+    return { ...b, ...qiData };
+  });
   res.json(bots);
 });
 
