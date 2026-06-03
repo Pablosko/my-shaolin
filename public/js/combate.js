@@ -60,6 +60,25 @@ async function loadArena() {
 
   setupTabs();
   cargarOponentes();
+
+  const entrenoParam = params.get('entreno');
+  const oponenteName = params.get('oponente_name');
+  if (entrenoParam === '1' && oponenteName) {
+    esModoEntreno = true;
+    document.querySelectorAll('.arena-tab').forEach(t => t.classList.remove('active'));
+    const entrenoTab = document.querySelector('[data-tab="entreno"]');
+    if (entrenoTab) entrenoTab.classList.add('active');
+    document.getElementById('combates-restantes-box').classList.add('hidden');
+    document.getElementById('entreno-info').classList.remove('hidden');
+
+    try {
+      const res = await fetch(`/api/shaolins/public/${encodeURIComponent(oponenteName)}`);
+      if (res.ok) {
+        const opData = await res.json();
+        await iniciarCombate(opData, false);
+      }
+    } catch (_) {}
+  }
 }
 
 function setupTabs() {

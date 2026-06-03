@@ -126,7 +126,7 @@ async function loadBase() {
         }
         if (shaolinId) {
           combatBtn.addEventListener('click', () => {
-            window.location.href = `/arena.html?shaolin_id=${shaolinId}`;
+            window.location.href = `/arena.html?shaolin_id=${shaolinId}&entreno=1&oponente_name=${encodeURIComponent(b.name)}`;
           });
         }
       }
