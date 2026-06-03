@@ -91,7 +91,9 @@ function renderQi(b) {
 
 function renderStats(b) {
   const hpNum = b.real_max_hp || b.max_hp;
+  const hpBase = 50 + (b.vitalidad || 0) * 3 + b.level * 2;
   document.getElementById('hp-text').innerHTML = `❤️ ${hpNum}`;
+  document.getElementById('hp-text').title = `HP base = 50 + ${b.vitalidad||0}×3 + ${b.level}×2 = ${hpBase}\nLuego × habilidades de HP% × Qi`;
 
   const fuerza = b.real_fuerza || b.fuerza;
   document.getElementById('fuerza-text').innerHTML = `💪 ${formatStatDiff(b.baseFuerza || b.fuerza, fuerza)}`;
@@ -107,10 +109,6 @@ function renderStats(b) {
   document.getElementById('velocidad-text').innerHTML = `⚡ ${formatStatDiff(b.baseVelocidad || b.velocidad, velocidad)}`;
   document.getElementById('velocidad-text').title = 'PA/turno = clamp(100, 250, 100 + floor(sqrt(Vel) × 12))\nIniciativa: mayor Vel ataca primero\nCrítico = Vel × 1% + habilidades';
   renderSegBar('velocidad-segbar', velocidad);
-
-  const vitalidad = b.vitalidad || 0;
-  document.getElementById('vitalidad-text').innerHTML = `🛡️ ${vitalidad}`;
-  document.getElementById('vitalidad-text').title = 'HP base = 50 + Vital × 3 + Nivel × 2\nLuego × habilidades de HP% × Qi';
 
   const xpNeeded = 6 + b.level * 2;
   const xpPercent = Math.min(100, (b.xp / xpNeeded) * 100);
