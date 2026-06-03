@@ -131,6 +131,7 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
 
   const b1Completo = {
     ...miShaolin,
+    hp: b1Qi.real_max_hp,
     armas: b1Armas,
     habilidades: b1Habilidades,
     qi: b1Qi.qi,
@@ -142,6 +143,7 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
 
   const b2Completo = {
     ...oponente,
+    hp: b2Qi.real_max_hp,
     armas: b2Armas,
     habilidades: b2Habilidades,
     qi: b2Qi.qi,
@@ -223,7 +225,7 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
   if (!esEntreno && !esPablosko) {
     let miShaolinActualizado = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
     const xpNeeded = 6 + miShaolinActualizado.level * 2;
-    if (miShaolinActualizado.xp >= xpNeeded && miShaolinActualizado.level < 99) {
+    if (miShaolinActualizado.xp >= xpNeeded) {
       await db.run('UPDATE shaolins SET pending_level = 1 WHERE id = ?', [miShaolin.id]);
       tieneNivelPendiente = true;
     }

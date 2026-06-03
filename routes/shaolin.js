@@ -11,7 +11,7 @@ router.get('/', verificarToken, async (req, res) => {
     const habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [b.id]);
     const armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id])).map(resolverArma);
     const qiData = aplicarSkillsYQi({ ...b, habilidades });
-    return { ...b, armas, habilidades, ...qiData };
+    return { ...b, armas, habilidades, ...qiData, hp: qiData.real_max_hp };
   }));
   res.json(result);
 });
@@ -36,6 +36,7 @@ router.get('/public/:name', async (req, res, next) => {
 
     const qiData = aplicarSkillsYQi(shaolin);
     Object.assign(shaolin, qiData);
+    shaolin.hp = qiData.real_max_hp;
 
     res.json(shaolin);
   } catch (err) {
@@ -83,6 +84,7 @@ router.get('/:id', verificarToken, async (req, res) => {
 
   const qiData = aplicarSkillsYQi(shaolin);
   Object.assign(shaolin, qiData);
+  shaolin.hp = qiData.real_max_hp;
 
   res.json(shaolin);
 });
@@ -252,7 +254,7 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
   }
 
   if (esPablosko) {
-    await db.run('UPDATE shaolins SET level = 99, xp = 0, pending_level = 0 WHERE id = ?', [shaolin.id]);
+    await db.run('UPDATE shaolins SET level = 999, xp = 0, pending_level = 0 WHERE id = ?', [shaolin.id]);
   } else {
     const sobrante = shaolin.xp - xpNeeded;
     await db.run(
