@@ -1,6 +1,7 @@
 let currentShaolin = null;
-let currentReward = null;
+let currentOpciones = null;
 let currentStatOptions = null;
+let selectedOpcionIndex = null;
 let selectedStatIndex = null;
 
 const SEG_COLORS = [
@@ -202,6 +203,7 @@ function toggleStatsInfo() {
 }
 
 async function startLevelUp() {
+  selectedOpcionIndex = null;
   selectedStatIndex = null;
   document.getElementById('level-up-modal').classList.remove('hidden');
   document.getElementById('lvl-step-1').classList.remove('hidden');
@@ -209,34 +211,44 @@ async function startLevelUp() {
 
   try {
     const data = await API.post(`/shaolins/${currentShaolin.id}/level-up-start`, {});
-    currentReward = data.reward;
+    currentOpciones = data.opciones;
     currentStatOptions = data.statOptions;
 
-    const icon = document.getElementById('lvl-reward-icon');
-    const text = document.getElementById('lvl-reward-text');
-    const desc = document.getElementById('lvl-reward-desc');
+    const container = document.getElementById('lvl-options');
+    container.innerHTML = '';
 
-    if (data.reward.tipo === 'arma') {
-      icon.textContent = '🗡️';
-      text.textContent = `¡Has obtenido un ARMA!`;
-      desc.textContent = `${data.reward.item.nombre} (${data.reward.item.dano_min}-${data.reward.item.dano_max} daño)`;
-    } else if (data.reward.tipo === 'habilidad') {
-      icon.textContent = '✨';
-      text.textContent = `¡Has obtenido una HABILIDAD!`;
-      desc.textContent = data.reward.descripcion || data.reward.nombre;
-    } else {
-      const nombres = { fuerza: 'Fuerza', agilidad: 'Agilidad', velocidad: 'Velocidad', vitalidad: `Vitalidad (+${data.reward.valor * 5} HP)` };
-      icon.textContent = '⬆️';
-      text.textContent = `¡+${data.reward.valor} ${nombres[data.reward.stat] || data.reward.stat}!`;
-      desc.textContent = `Mejora directa de stat base`;
-    }
+    currentOpciones.forEach((opt, i) => {
+      const card = document.createElement('div');
+      card.className = 'stat-option-card';
+      card.setAttribute('data-index', i);
+      card.style.borderColor = '#4a3060';
+      const tipoLabel = opt.tipo === 'arma' ? 'Arma' : opt.tipo === 'habilidad' ? 'Habilidad' : 'Stat';
+      card.innerHTML = `
+        <div class="stat-option-icono">${opt.icono}</div>
+        <div class="stat-option-valor">${opt.nombre}</div>
+        <div class="stat-option-desc">${opt.descripcion}</div>
+        <div class="stat-option-rara" style="color:#8b6fa0">${tipoLabel}</div>
+      `;
+      card.addEventListener('click', () => seleccionarOpcion(i));
+      container.appendChild(card);
+    });
   } catch (err) {
     alert('Error: ' + err.message);
     document.getElementById('level-up-modal').classList.add('hidden');
   }
 }
 
+function seleccionarOpcion(index) {
+  selectedOpcionIndex = index;
+  document.querySelectorAll('#lvl-options .stat-option-card').forEach((el, i) => {
+    el.style.borderColor = i === index ? '#8b5cf6' : '#4a3060';
+  });
+  document.getElementById('lvl-step-1-btn').style.display = 'block';
+}
+
 function mostrarPaso2() {
+  if (selectedOpcionIndex === null) return;
+
   document.getElementById('lvl-step-1').classList.add('hidden');
   document.getElementById('lvl-step-2').classList.remove('hidden');
 
@@ -265,7 +277,7 @@ function mostrarPaso2() {
 
 function seleccionarStatOption(index) {
   selectedStatIndex = index;
-  document.querySelectorAll('.stat-option-card').forEach((el, i) => {
+  document.querySelectorAll('#lvl-stat-options .stat-option-card').forEach((el, i) => {
     el.style.borderColor = i === index ? '#8b5cf6' : '#4a3060';
   });
   document.getElementById('lvl-step-2-btn').style.display = 'block';
@@ -280,7 +292,7 @@ async function confirmarLevelUp() {
 
   try {
     const data = await API.post(`/shaolins/${currentShaolin.id}/level-up-confirm`, {
-      reward: currentReward,
+      opcionElegida: currentOpciones[selectedOpcionIndex],
       statChoice: currentStatOptions[selectedStatIndex],
     });
 
@@ -295,7 +307,7 @@ async function confirmarLevelUp() {
   } catch (err) {
     alert('Error: ' + err.message);
     btn.disabled = false;
-    btn.textContent = '✅ Confirmar';
+    btn.textContent = '✅ Confirmar nivel';
   }
 }
 

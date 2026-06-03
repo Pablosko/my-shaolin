@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
-const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel } = require('../game/data');
+const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel } = require('../game/data');
 
 const router = express.Router();
 
@@ -123,41 +123,37 @@ router.post('/:id/level-up-start', verificarToken, async (req, res) => {
   const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ? AND pending_level = 1', [req.params.id, req.userId]);
   if (!shaolin) return res.status(400).json({ error: 'No hay nivel pendiente' });
 
-  const reward = generarRewardNivel();
+  const opciones = generarOpcionesRecompensa();
   const statOptions = generarStatsOpcionesNivel();
 
-  res.json({ reward, statOptions });
+  res.json({ opciones, statOptions });
 });
 
 router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
-  const { reward, statChoice } = req.body;
+  const { opcionElegida, statChoice } = req.body;
   const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ? AND pending_level = 1', [req.params.id, req.userId]);
   if (!shaolin) return res.status(400).json({ error: 'No hay nivel pendiente' });
 
   const xpNeeded = 6 + shaolin.level * 2;
 
-  if (reward && reward.tipo === 'arma' && reward.item) {
+  if (opcionElegida && opcionElegida.tipo === 'arma' && opcionElegida.item) {
     await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 0)',
-      [shaolin.id, reward.item.nombre, reward.item.tipo, reward.item.dano_min, reward.item.dano_max]);
-  } else if (reward && reward.tipo === 'habilidad' && reward.item) {
-    const existente = await db.get('SELECT id, nivel FROM habilidades WHERE shaolin_id = ? AND nombre = ?', [shaolin.id, reward.item.nombre]);
+      [shaolin.id, opcionElegida.item.nombre, opcionElegida.item.tipo, opcionElegida.item.dano_min, opcionElegida.item.dano_max]);
+  } else if (opcionElegida && opcionElegida.tipo === 'habilidad' && opcionElegida.item) {
+    const existente = await db.get('SELECT id, nivel FROM habilidades WHERE shaolin_id = ? AND nombre = ?', [shaolin.id, opcionElegida.item.nombre]);
     if (existente) {
       const nuevoNivel = Math.min(3, (existente.nivel || 1) + 1);
       await db.run('UPDATE habilidades SET nivel = ? WHERE id = ?', [nuevoNivel, existente.id]);
     } else {
       await db.run('INSERT INTO habilidades (shaolin_id, nombre, descripcion, efecto, nivel) VALUES (?, ?, ?, ?, 1)',
-        [shaolin.id, reward.item.nombre, reward.item.descripcion, reward.item.efecto]);
+        [shaolin.id, opcionElegida.item.nombre, opcionElegida.item.descripcion, opcionElegida.item.efecto]);
     }
-  } else if (reward && reward.tipo === 'stat') {
-    if (reward.stat === 'vitalidad') {
-      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = max_hp + ? * 5, max_hp = max_hp + ? * 5 WHERE id = ?',
-        [reward.valor, reward.valor, reward.valor, shaolin.id]);
-    } else if (reward.stat === 'fuerza') {
-      await db.run(`UPDATE shaolins SET ${reward.stat} = ${reward.stat} + ? WHERE id = ?`, [reward.valor, shaolin.id]);
-    } else if (reward.stat === 'agilidad') {
-      await db.run(`UPDATE shaolins SET ${reward.stat} = ${reward.stat} + ? WHERE id = ?`, [reward.valor, shaolin.id]);
-    } else if (reward.stat === 'velocidad') {
-      await db.run(`UPDATE shaolins SET ${reward.stat} = ${reward.stat} + ? WHERE id = ?`, [reward.valor, shaolin.id]);
+  } else if (opcionElegida && opcionElegida.tipo === 'stat') {
+    if (opcionElegida.stat === 'vitalidad') {
+      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ? * 5, max_hp = max_hp + ? * 5 WHERE id = ?',
+        [opcionElegida.valor, opcionElegida.valor, opcionElegida.valor, shaolin.id]);
+    } else {
+      await db.run(`UPDATE shaolins SET ${opcionElegida.stat} = ${opcionElegida.stat} + ? WHERE id = ?`, [opcionElegida.valor, shaolin.id]);
     }
   }
 

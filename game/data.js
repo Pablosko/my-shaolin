@@ -244,23 +244,52 @@ function aplicarSkillsYQi(b) {
   };
 }
 
-function generarRewardNivel() {
+function generarRecompensaUnica() {
   const r = Math.random();
   if (r < 0.40) {
     const item = getRandomArma();
-    return { tipo: 'arma', nombre: item.nombre, item };
+    return {
+      tipo: 'arma',
+      icono: '🗡️',
+      nombre: item.nombre,
+      descripcion: `Daño ${item.dano_min}-${item.dano_max}`,
+      item,
+    };
   }
   if (r < 0.70) {
     const item = getRandomHabilidad();
     const efecto = JSON.parse(item.efecto);
     const valorNv1 = efecto.valorPorNivel[1];
-    const desc = `${item.descripcion} (Nv1: ${Math.round(valorNv1 * 100)}%)`;
-    return { tipo: 'habilidad', nombre: item.nombre, descripcion: desc, item };
+    return {
+      tipo: 'habilidad',
+      icono: '✨',
+      nombre: item.nombre,
+      descripcion: `${item.descripcion} (Nv1: ${Math.round(valorNv1 * 100)}%)`,
+      item,
+    };
   }
   const stats = ['fuerza', 'agilidad', 'velocidad', 'vitalidad'];
   const stat = getRandomItem(stats);
   const valor = stat === 'vitalidad' ? 2 : 1;
-  return { tipo: 'stat', stat, valor };
+  const iconos = { fuerza: '💪', agilidad: '🏃', velocidad: '⚡', vitalidad: '🛡️' };
+  const labels = { fuerza: 'Fuerza', agilidad: 'Agilidad', velocidad: 'Velocidad', vitalidad: 'Vitalidad' };
+  const descStat = stat === 'vitalidad' ? `+${valor} Vitalidad (+${valor * 5} HP)` : `+${valor} ${labels[stat]}`;
+  return {
+    tipo: 'stat',
+    icono: iconos[stat],
+    nombre: descStat,
+    descripcion: 'Mejora de stat base',
+    stat,
+    valor,
+  };
+}
+
+function generarOpcionesRecompensa() {
+  return [generarRecompensaUnica(), generarRecompensaUnica()];
+}
+
+function generarRewardNivel() {
+  return generarRecompensaUnica();
 }
 
 function generarStatsOpcionesNivel() {
@@ -295,5 +324,5 @@ module.exports = {
   generarBots, nombresBot,
   generarOpcionesIniciales,
   calcularQi, aplicarSkillsYQi, getValorHabilidadPorNivel,
-  generarRewardNivel, generarStatsOpcionesNivel,
+  generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel,
 };

@@ -146,19 +146,16 @@
   <div id="level-up-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div id="lvl-step-1">
-        <h2 style="text-align:center;margin-bottom:20px">⬆️ ¡SUBIR DE NIVEL!</h2>
-        <div id="lvl-reward" style="text-align:center;padding:20px">
-          <div style="font-size:64px;margin-bottom:12px" id="lvl-reward-icon">🎁</div>
-          <div id="lvl-reward-text" style="font-size:20px;font-weight:bold;margin-bottom:8px">Cargando...</div>
-          <div id="lvl-reward-desc" style="color:#8b6fa0;font-size:14px"></div>
-        </div>
-        <button id="lvl-step-1-btn" class="btn btn-primario" style="width:100%;margin-top:16px" onclick="mostrarPaso2()">🎯 Elegir mejora →</button>
+        <h2 style="text-align:center;margin-bottom:8px">⬆️ ¡SUBIR DE NIVEL!</h2>
+        <p style="text-align:center;color:#8b6fa0;font-size:14px;margin-bottom:16px">Elige tu recompensa especial</p>
+        <div id="lvl-options" style="display:flex;gap:16px;justify-content:center"></div>
+        <button id="lvl-step-1-btn" class="btn btn-primario" style="width:100%;margin-top:16px;display:none" onclick="mostrarPaso2()">🎯 Elegir mejora de stats →</button>
       </div>
       <div id="lvl-step-2" class="hidden">
-        <h2 style="text-align:center;margin-bottom:12px">Elige tu mejora</h2>
+        <h2 style="text-align:center;margin-bottom:12px">Elige tu mejora de stats</h2>
         <p style="text-align:center;color:#8b6fa0;font-size:14px;margin-bottom:16px">Selecciona una de las dos opciones</p>
         <div id="lvl-stat-options" style="display:flex;gap:16px;justify-content:center"></div>
-        <button id="lvl-step-2-btn" class="btn btn-primario" style="width:100%;margin-top:20px;display:none" onclick="confirmarLevelUp()">✅ Confirmar</button>
+        <button id="lvl-step-2-btn" class="btn btn-primario" style="width:100%;margin-top:20px;display:none" onclick="confirmarLevelUp()">✅ Confirmar nivel</button>
       </div>
     </div>
   </div>
