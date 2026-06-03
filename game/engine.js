@@ -228,16 +228,16 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
           if (def.hp_actual <= 0) return;
         }
       } else {
-        if (paDisponible >= COST_MOVE[dist - 1]) {
-          const cost = COST_MOVE[dist - 1];
-          paDisponible -= cost;
-          if (rango < 4) {
-            rango++;
-            e('move', { actor: atk.name, from: rango - 1, to: rango, cost, retrocede: true });
-            e('range_change', { rango, nombre: RANGO_NOMBRE[rango] });
+          if (paDisponible >= COST_MOVE[dist - 1]) {
+            const cost = COST_MOVE[dist - 1];
+            paDisponible -= cost;
+            if (rango > 0) {
+              rango--;
+              e('move', { actor: atk.name, from: rango + 1, to: rango, cost, retrocede: false });
+              e('range_change', { rango, nombre: RANGO_NOMBRE[rango] });
+            }
+            continue;
           }
-          continue;
-        }
       }
       break;
     }
