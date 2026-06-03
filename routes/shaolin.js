@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
-const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel, resolverArma, armas: armasData, habilidades: habilidadesData } = require('../game/data');
+const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel, resolverArma, calcularMaxHp, armas: armasData, habilidades: habilidadesData } = require('../game/data');
 
 const router = express.Router();
 
@@ -150,8 +150,8 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
     }
   } else if (opcionElegida && opcionElegida.tipo === 'stat') {
     if (opcionElegida.stat === 'vitalidad') {
-      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ? * 3, max_hp = max_hp + ? * 3 WHERE id = ?',
-        [opcionElegida.valor, opcionElegida.valor, opcionElegida.valor, shaolin.id]);
+      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ? WHERE id = ?',
+        [opcionElegida.valor, shaolin.id]);
     } else {
       await db.run(`UPDATE shaolins SET ${opcionElegida.stat} = ${opcionElegida.stat} + ? WHERE id = ?`, [opcionElegida.valor, shaolin.id]);
     }
@@ -159,9 +159,8 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
 
   if (statChoice) {
     if (statChoice.stat === 'vitalidad') {
-      const hpGain = statChoice.valor * 3;
-      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ?, max_hp = max_hp + ? WHERE id = ?',
-        [statChoice.valor, hpGain, hpGain, shaolin.id]);
+      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ? WHERE id = ?',
+        [statChoice.valor, shaolin.id]);
     } else {
       await db.run(`UPDATE shaolins SET ${statChoice.stat} = ${statChoice.stat} + ? WHERE id = ?`, [statChoice.valor, shaolin.id]);
     }
@@ -172,7 +171,7 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
 
   if (esPablosko) {
     await db.run(
-      'UPDATE shaolins SET fuerza = 99, agilidad = 99, velocidad = 99, vitalidad = 50, hp = hp + 250, max_hp = max_hp + 250 WHERE id = ?',
+      'UPDATE shaolins SET fuerza = 99, agilidad = 99, velocidad = 99, vitalidad = 50 WHERE id = ?',
       [shaolin.id]
     );
 
@@ -200,14 +199,18 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
   }
 
   if (esPablosko) {
-    await db.run('UPDATE shaolins SET level = 99, xp = 0, hp = max_hp, pending_level = 0 WHERE id = ?', [shaolin.id]);
+    await db.run('UPDATE shaolins SET level = 99, xp = 0, pending_level = 0 WHERE id = ?', [shaolin.id]);
   } else {
     const sobrante = shaolin.xp - xpNeeded;
     await db.run(
-      'UPDATE shaolins SET level = level + 1, xp = ?, hp = max_hp + 2, max_hp = max_hp + 2, pending_level = 0 WHERE id = ?',
+      'UPDATE shaolins SET level = level + 1, xp = ?, pending_level = 0 WHERE id = ?',
       [Math.max(0, sobrante), shaolin.id]
     );
   }
+
+  const actualizado = await db.get('SELECT * FROM shaolins WHERE id = ?', [shaolin.id]);
+  const nuevoMaxHp = calcularMaxHp(actualizado.vitalidad, actualizado.level);
+  await db.run('UPDATE shaolins SET hp = ?, max_hp = ? WHERE id = ?', [nuevoMaxHp, nuevoMaxHp, shaolin.id]);
 
   const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [shaolin.id]);
   shaolinFinal.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);

@@ -36,6 +36,16 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('vitalidad_nerf_v3')`);
     console.log('Migration vitalidad_nerf_v3: vitalidad now gives +3 HP instead of +5');
   }
+
+  const hpFormulaResult = await client.execute(`SELECT name FROM _migrations WHERE name = 'hp_formula_v4'`);
+  if (hpFormulaResult.rows.length === 0) {
+    await client.execute(`UPDATE shaolins SET max_hp = 50 + vitalidad * 3 + level * 2, hp = 50 + vitalidad * 3 + level * 2`);
+    await client.execute(`UPDATE shaolins SET hp = 1 WHERE hp < 1`);
+    await client.execute(`UPDATE shaolins SET max_hp = 1 WHERE max_hp < 1`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'hp_formula_v4'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('hp_formula_v4')`);
+    console.log('Migration hp_formula_v4: max_hp = 50 + vitalidad*3 + level*2');
+  }
 }
 
 module.exports = { runMigrations };

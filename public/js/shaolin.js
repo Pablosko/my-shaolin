@@ -95,18 +95,22 @@ function renderStats(b) {
 
   const fuerza = b.real_fuerza || b.fuerza;
   document.getElementById('fuerza-text').innerHTML = `💪 ${formatStatDiff(b.baseFuerza || b.fuerza, fuerza)}`;
+  document.getElementById('fuerza-text').title = 'Daño puño = floor(Fue×0.3) + rand(5-7)\nDaño arma = Fue + dañoArma\nCrítico = daño × 1.5';
   renderSegBar('fuerza-segbar', fuerza);
 
   const agilidad = b.real_agilidad || b.agilidad;
   document.getElementById('agilidad-text').innerHTML = `🏃 ${formatStatDiff(b.baseAgilidad || b.agilidad, agilidad)}`;
+  document.getElementById('agilidad-text').title = 'Precisión = clamp(0.20, 0.98, 0.85 + (agiAtk - agiDef) × 0.02)\nEsquiva base = 10% + habilidades';
   renderSegBar('agilidad-segbar', agilidad);
 
   const velocidad = b.real_velocidad || b.velocidad;
   document.getElementById('velocidad-text').innerHTML = `⚡ ${formatStatDiff(b.baseVelocidad || b.velocidad, velocidad)}`;
+  document.getElementById('velocidad-text').title = 'PA/turno = clamp(100, 250, 100 + floor(sqrt(Vel) × 12))\nIniciativa: mayor Vel ataca primero\nCrítico = Vel × 1% + habilidades';
   renderSegBar('velocidad-segbar', velocidad);
 
   const vitalidad = b.vitalidad || 0;
-  document.getElementById('vitalidad-text').innerHTML = `🛡️ ${vitalidad} (+${vitalidad * 3} HP)`;
+  document.getElementById('vitalidad-text').innerHTML = `🛡️ ${vitalidad}`;
+  document.getElementById('vitalidad-text').title = 'HP base = 50 + Vital × 3 + Nivel × 2\nLuego × habilidades de HP% × Qi';
 
   const xpNeeded = 6 + b.level * 2;
   const xpPercent = Math.min(100, (b.xp / xpNeeded) * 100);
@@ -157,25 +161,55 @@ function renderHabilidades(b) {
     return;
   }
   box.classList.remove('hidden');
+
   container.innerHTML = b.habilidades.map(h => {
-    let efecto = '?';
+    let efectoActual = '?';
+    let levels = [];
     try {
       const e = JSON.parse(h.efecto);
-      const valor = e.valorPorNivel ? (e.valorPorNivel[h.nivel] || e.valorPorNivel[1] || 0) : 0;
-      if (e.stat === 'qi_boost') efecto = `×${(1 + valor).toFixed(2)} Qi`;
-      else if (e.stat.includes('porcentual')) efecto = `+${Math.round(valor * 100)}%`;
-      else if (['defensa', 'resistencia'].includes(e.stat)) efecto = `-${Math.round(valor * 100)}% daño`;
-      else efecto = `+${Math.round(valor * 100)}%`;
+      for (let n = 1; n <= 3; n++) {
+        const v = e.valorPorNivel ? (e.valorPorNivel[n] || 0) : 0;
+        if (e.stat === 'qi_boost') {
+          levels.push(`×${(1 + v).toFixed(2)} Qi`);
+        } else if (e.stat.includes('porcentual')) {
+          levels.push(`+${Math.round(v * 100)}% ${capitalizeStat(e.stat.replace('_porcentual', ''))}`);
+        } else if (['defensa', 'resistencia'].includes(e.stat)) {
+          levels.push(`-${Math.round(v * 100)}% daño`);
+        } else if (e.stat === 'robo_vida') {
+          levels.push(`Robo ${Math.round(v * 100)}%`);
+        } else if (e.stat === 'combo') {
+          levels.push(`+${Math.round(v * 100)}% combo`);
+        } else {
+          levels.push(`+${Math.round(v * 100)}%`);
+        }
+      }
+      const v = e.valorPorNivel ? (e.valorPorNivel[h.nivel] || e.valorPorNivel[1] || 0) : 0;
+      if (e.stat === 'qi_boost') efectoActual = `×${(1 + v).toFixed(2)} Qi`;
+      else if (e.stat.includes('porcentual')) efectoActual = `+${Math.round(v * 100)}%`;
+      else if (['defensa', 'resistencia'].includes(e.stat)) efectoActual = `-${Math.round(v * 100)}% daño`;
+      else efectoActual = `+${Math.round(v * 100)}%`;
     } catch (_) {}
+
     return `
-      <div class="item-row">
-        <span class="item-icono">✨</span>
-        <span class="item-nombre">${h.nombre}</span>
-        <span class="item-nivel">Nv.${h.nivel || 1}</span>
-        <span class="item-info">${efecto}</span>
+      <div class="hab-card">
+        <div class="hab-card-icono">✨</div>
+        <div class="hab-card-nombre">${h.nombre}</div>
+        <div class="hab-card-nivel">Nv.${h.nivel || 1}</div>
+        <div class="hab-card-efecto">${efectoActual}</div>
+        <div class="hab-tooltip">
+          ${levels.map((text, i) => {
+            const n = i + 1;
+            const cls = n === h.nivel ? 'actual' : n < h.nivel ? 'pasado' : 'futuro';
+            return `<div class="hab-tooltip-row ${cls}"><span>Nv.${n}</span><span>${text}</span></div>`;
+          }).join('')}
+        </div>
       </div>
     `;
   }).join('');
+}
+
+function capitalizeStat(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function renderHistorial(b) {

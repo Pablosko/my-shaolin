@@ -1212,6 +1212,94 @@ input:focus, select:focus {
   color: #8b6fa0;
 }
 
+/* Habilidades grid */
+.hab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.hab-card {
+  position: relative;
+  background: rgba(30, 15, 50, 0.5);
+  border: 1px solid #4a3060;
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: default;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.hab-card:hover {
+  border-color: #a78bfa;
+  transform: translateY(-2px);
+  z-index: 10;
+}
+
+.hab-card-icono {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.hab-card-nombre {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.hab-card-nivel {
+  font-size: 11px;
+  color: #22c55e;
+  margin-bottom: 2px;
+}
+
+.hab-card-efecto {
+  font-size: 12px;
+  color: #8b6fa0;
+}
+
+.hab-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 8, 28, 0.97);
+  border: 1px solid #6a3a8a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+}
+
+.hab-card:hover .hab-tooltip {
+  display: block;
+}
+
+.hab-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.hab-tooltip-row.actual {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.hab-tooltip-row.pasado {
+  color: #8b6fa0;
+  opacity: 0.7;
+}
+
+.hab-tooltip-row.futuro {
+  color: #6a3a8a;
+  opacity: 0.55;
+}
+
 /* Tooltip por hover */
 .arma-tooltip {
   display: none;
@@ -1251,6 +1339,6 @@ input:focus, select:focus {
 }
 
 .arma-tooltip-row.futuro {
-  color: #4a3060;
-  opacity: 0.35;
+  color: #6a3a8a;
+  opacity: 0.55;
 }

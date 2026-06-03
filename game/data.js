@@ -30,6 +30,10 @@ const habilidades = [
   { nombre: 'Piel de Piedra', descripcion: 'Resistencia adicional al daño', efecto: JSON.stringify({ stat: 'resistencia', valorPorNivel: { 1: 0.15, 2: 0.25, 3: 0.35 } }) },
 ];
 
+function calcularMaxHp(vitalidad, level) {
+  return 50 + (vitalidad || 0) * 3 + level * 2;
+}
+
 function getRandomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -57,16 +61,17 @@ function getRandomHabilidad() {
 
 function generarStatsIniciales(genero) {
   const base = genero === 'masculino'
-    ? { hp: 55, max_hp: 55, fuerza: 3, agilidad: 2, velocidad: 2, vitalidad: 0 }
-    : { hp: 50, max_hp: 50, fuerza: 2, agilidad: 3, velocidad: 3, vitalidad: 0 };
+    ? { fuerza: 3, agilidad: 2, velocidad: 2, vitalidad: 1 }
+    : { fuerza: 2, agilidad: 3, velocidad: 3, vitalidad: 0 };
 
   const r = Math.floor(Math.random() * 4);
   if (r === 0) base.fuerza += 1;
   else if (r === 1) base.agilidad += 1;
   else if (r === 2) base.velocidad += 1;
-  else { base.hp += 5; base.max_hp += 5; }
+  else base.vitalidad += 1;
 
-  return base;
+  const hp = calcularMaxHp(base.vitalidad, 1);
+  return { ...base, hp, max_hp: hp };
 }
 
 const nombresBot = [
@@ -93,13 +98,10 @@ function generarBot(nivel = 1) {
   if (Math.random() < 0.3) habilidades.push({ ...getRandomHabilidad(), nivel: 1 });
 
   for (let i = 1; i < nivel; i++) {
-    stats.hp += 2;
-    stats.max_hp += 2;
-
     const r = Math.random();
     if (r < 0.40) {
       const s = ['fuerza', 'agilidad', 'velocidad', 'vitalidad'][Math.floor(Math.random() * 4)];
-      if (s === 'vitalidad') { stats.hp += 10; stats.max_hp += 10; }
+      if (s === 'vitalidad') stats.vitalidad = (stats.vitalidad || 0) + 2;
       else stats[s]++;
     } else if (r < 0.70) {
       const a = getRandomArma();
@@ -112,6 +114,7 @@ function generarBot(nivel = 1) {
     }
   }
 
+  const finalHp = calcularMaxHp(stats.vitalidad, nivel);
   return {
     id: -Math.floor(Math.random() * 10000) - 1,
     user_id: -1,
@@ -120,8 +123,8 @@ function generarBot(nivel = 1) {
     skin: randomSkin(),
     level: nivel,
     xp: 0,
-    hp: stats.hp,
-    max_hp: stats.max_hp,
+    hp: finalHp,
+    max_hp: finalHp,
     fuerza: stats.fuerza,
     agilidad: stats.agilidad,
     velocidad: stats.velocidad,
@@ -250,7 +253,8 @@ function aplicarSkillsYQi(b) {
   const baseFuerza = Math.floor(b.fuerza * boostFuerza);
   const baseAgilidad = Math.floor(b.agilidad * boostAgilidad);
   const baseVelocidad = Math.floor(b.velocidad * boostVelocidad);
-  const baseMaxHp = Math.floor(b.max_hp * boostHp);
+  const baseHp = calcularMaxHp(b.vitalidad, b.level);
+  const baseMaxHp = Math.floor(baseHp * boostHp);
 
   return {
     qi,
@@ -353,7 +357,7 @@ function generarStatsOpcionesNivel() {
 }
 
 module.exports = {
-  armas, habilidades,
+  armas, habilidades, calcularMaxHp,
   getRandomArma, getRandomHabilidad, resolverArma,
   generarStatsIniciales,
   generarBots, nombresBot,
