@@ -8,12 +8,14 @@ Juego multijugador de artes marciales por turnos. Inspirado en El Shaolin.
 - **Base de datos**: Turso (libsql client, SQLite en la nube)
 - **Frontend**: HTML + CSS vanilla (sin frameworks)
 - **Auth**: JWT (jsonwebtoken)
-- **Hosting**: Fly.io (https://myshaolin.fly.dev)
+- **Hosting**: Render.com (https://my-shaolin.onrender.com)
 
-### Despliegue manual
+### Despliegue
 
 ```bash
-fly deploy
+git add . && git commit -m "mensaje" && git push
+# Trigger deploy inmediato via hook:
+curl -X POST https://api.render.com/deploy/srv-d8g2nijtqb8s73ch6bgg?key=CLhwr9RrsrQ
 ```
 
 ### Variables de entorno
