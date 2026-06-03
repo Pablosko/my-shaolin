@@ -1,6 +1,7 @@
 async function loadBase() {
-  const pathParts = window.location.pathname.split('/');
-  const name = pathParts[pathParts.length - 1];
+  const pn = window.location.pathname;
+  const idx = pn.indexOf('/base/');
+  const name = idx >= 0 ? decodeURIComponent(pn.slice(idx + 6).replace(/\/$/, '')) : '';
   if (!name) { renderNotFound(); return; }
 
   const main = document.getElementById('main-content');
@@ -9,10 +10,11 @@ async function loadBase() {
     const res = await fetch(`/api/shaolins/public/${encodeURIComponent(name)}`);
     if (!res.ok) {
       if (res.status === 404) { renderNotFound(); return; }
-      throw new Error('Error al cargar');
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Error ' + res.status);
     }
-    const data = await res.json();
-    const b = data;
+    const b = await res.json();
+    if (!b || !b.name) { renderNotFound(); return; }
 
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('userId');
@@ -21,8 +23,10 @@ async function loadBase() {
     main.innerHTML = '';
 
     const color = getColor(b.genero);
-
-    const statsHtml = renderBaseStats(b);
+    const hpNum = b.real_max_hp || b.max_hp;
+    const fuerza = b.real_fuerza || b.fuerza;
+    const agilidad = b.real_agilidad || b.agilidad;
+    const velocidad = b.real_velocidad || b.velocidad;
 
     main.innerHTML = `
       <div class="base-layout">
@@ -30,27 +34,63 @@ async function loadBase() {
           <div class="bp-avatar-wrap">
             <img src="${getSkinUrl(b.genero, b.skin)}" class="bp-avatar" style="border-color:${color}" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\\'font-size:80px;padding:10px\\'>🥋</div>'">
           </div>
-          <div class="bp-name">${b.name}</div>
-          <div class="bp-owner">👤 ${b.username}</div>
+          <div class="bp-name">${escapeHtml(b.name)}</div>
+          <div class="bp-owner">👤 ${escapeHtml(b.username || '')}</div>
           <div class="bp-level">Nivel ${b.level}</div>
           <div class="bp-created">🐣 Creado ${formatDate(b.created_at)}</div>
           <div class="bp-winrate">
             <div class="wr-value">${b.total_combates > 0 ? Math.round((b.wins / b.total_combates) * 100) : 0}%</div>
-            <div class="wr-label">🎖️ ${b.wins}/${b.total_combates} combates</div>
+            <div class="wr-label">🎖️ ${b.wins || 0}/${b.total_combates || 0} combates</div>
           </div>
           <div class="base-actions">
             ${esDueno ? `
               <a href="/shaolin.html?id=${b.id}" class="btn btn-primario">📋 Ir a mi perfil</a>
               <a href="/arena.html?shaolin_id=${b.id}" class="btn btn-combatir">⚔️ Ir a la arena</a>
             ` : token ? `
-              <button class="btn btn-combatir" id="btn-combatir-base" data-op-name="${b.name}" data-op-id="${b.id}">⚔️ Combatir</button>
+              <button class="btn btn-combatir" id="btn-combatir-base" data-op-name="${escapeHtml(b.name)}" data-op-id="${b.id}">⚔️ Combatir</button>
             ` : `
               <a href="/" class="btn btn-primario">🔑 Iniciar sesión</a>
             `}
           </div>
         </div>
         <div class="base-content">
-          ${statsHtml}
+          <div class="card">
+            <h3>📊 Estadísticas</h3>
+            <div class="stat-group" title="HP = 50 + vitalidad×3 + level×2, luego × habilidades% × Qi">
+              <div class="stat-info-row">
+                <span class="stat-label">❤️ Vida</span>
+                <span class="stat-value hp-value">${hpNum}</span>
+              </div>
+            </div>
+            <div class="stat-group" title="Daño puño = floor(Fue×0.3) + rand(5-7)&#10;Daño arma = Fue + dañoArma&#10;Crítico = daño × 1.5">
+              <div class="stat-info-row">
+                <span class="stat-label">💪 Fuerza</span>
+                <span class="stat-value">${formatStatDiff(b.baseFuerza || b.fuerza, fuerza)}</span>
+              </div>
+              <div class="seg-bar-container">${renderSegBarStatic(fuerza)}</div>
+            </div>
+            <div class="stat-group" title="Precisión = clamp(0.20, 0.98, 0.85 + (agiAtk - agiDef) × 0.02)&#10;Esquiva base = 10% + habilidades">
+              <div class="stat-info-row">
+                <span class="stat-label">🏃 Agilidad</span>
+                <span class="stat-value">${formatStatDiff(b.baseAgilidad || b.agilidad, agilidad)}</span>
+              </div>
+              <div class="seg-bar-container">${renderSegBarStatic(agilidad)}</div>
+            </div>
+            <div class="stat-group" title="PA/turno = clamp(100, 250, 100 + floor(sqrt(Vel) × 12))&#10;Iniciativa: mayor Vel ataca primero&#10;Crítico = Vel × 1% + habilidades">
+              <div class="stat-info-row">
+                <span class="stat-label">⚡ Velocidad</span>
+                <span class="stat-value">${formatStatDiff(b.baseVelocidad || b.velocidad, velocidad)}</span>
+              </div>
+              <div class="seg-bar-container">${renderSegBarStatic(velocidad)}</div>
+            </div>
+            ${b.qi ? `
+            <div class="stat-group" title="Qi = potencialSegunNivel × armoníaDeStats&#10;Multiplica stats × factor (0.5 a 1.5)">
+              <div class="stat-info-row">
+                <span class="stat-label">🌀 Qi</span>
+                <span class="stat-value">×${b.qi.toFixed(2)}</span>
+              </div>
+            </div>` : ''}
+          </div>
           <div id="base-armas-box" class="${!b.armas || b.armas.length === 0 ? 'hidden' : ''}">
             <div class="card">
               <h3>🗡️ Armas</h3>
@@ -72,7 +112,6 @@ async function loadBase() {
 
     const combatBtn = document.getElementById('btn-combatir-base');
     if (combatBtn && token) {
-      const userIdLocal = localStorage.getItem('userId');
       const shaolins = await (await fetch('/api/shaolins', {
         headers: { 'Authorization': 'Bearer ' + token }
       })).json();
@@ -81,7 +120,7 @@ async function loadBase() {
         if (shaolins.length === 1) {
           shaolinId = shaolins[0].id;
         } else {
-          const pick = prompt(`Elige tu guerrero (ID):\n${shaolins.map((s,i) => `${i+1}. ${s.name}`).join('\n')}`);
+          const pick = prompt(`Elige tu guerrero:\n${shaolins.map((s,i) => `${i+1}. ${s.name}`).join('\n')}`);
           const idx = parseInt(pick) - 1;
           if (idx >= 0 && idx < shaolins.length) shaolinId = shaolins[idx].id;
         }
@@ -104,53 +143,6 @@ async function loadBase() {
       </div>
     `;
   }
-}
-
-function renderBaseStats(b) {
-  const hpNum = b.real_max_hp || b.max_hp;
-  const fuerza = b.real_fuerza || b.fuerza;
-  const agilidad = b.real_agilidad || b.agilidad;
-  const velocidad = b.real_velocidad || b.velocidad;
-
-  return `
-    <div class="card">
-      <h3>📊 Estadísticas</h3>
-      <div class="stat-group" title="HP = 50 + vitalidad×3 + level×2\nLuego × habilidades de HP% × Qi">
-        <div class="stat-info-row">
-          <span class="stat-label">❤️ Vida</span>
-          <span class="stat-value">${hpNum}</span>
-        </div>
-      </div>
-      <div class="stat-group" title="Daño puño = floor(Fue×0.3) + rand(5-7)\nDaño arma = Fue + dañoArma\nCrítico = daño × 1.5">
-        <div class="stat-info-row">
-          <span class="stat-label">💪 Fuerza</span>
-          <span class="stat-value">${formatStatDiff(b.baseFuerza || b.fuerza, fuerza)}</span>
-        </div>
-        <div class="seg-bar-container">${renderSegBarStatic(fuerza)}</div>
-      </div>
-      <div class="stat-group" title="Precisión = clamp(0.20, 0.98, 0.85 + (agiAtk - agiDef) × 0.02)\nEsquiva base = 10% + habilidades">
-        <div class="stat-info-row">
-          <span class="stat-label">🏃 Agilidad</span>
-          <span class="stat-value">${formatStatDiff(b.baseAgilidad || b.agilidad, agilidad)}</span>
-        </div>
-        <div class="seg-bar-container">${renderSegBarStatic(agilidad)}</div>
-      </div>
-      <div class="stat-group" title="PA/turno = clamp(100, 250, 100 + floor(sqrt(Vel) × 12))\nIniciativa: mayor Vel ataca primero\nCrítico = Vel × 1% + habilidades">
-        <div class="stat-info-row">
-          <span class="stat-label">⚡ Velocidad</span>
-          <span class="stat-value">${formatStatDiff(b.baseVelocidad || b.velocidad, velocidad)}</span>
-        </div>
-        <div class="seg-bar-container">${renderSegBarStatic(velocidad)}</div>
-      </div>
-      ${b.qi ? `
-      <div class="stat-group" title="Qi = potencialSegunNivel × armoníaDeStats\nMultiplica stats × factor (0.5 a 1.5)">
-        <div class="stat-info-row">
-          <span class="stat-label">🌀 Qi</span>
-          <span class="stat-value">×${b.qi.toFixed(2)}</span>
-        </div>
-      </div>` : ''}
-    </div>
-  `;
 }
 
 function renderSegBarStatic(valor) {
@@ -274,6 +266,12 @@ function formatDate(dateStr) {
 
 function capitalizeStat(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

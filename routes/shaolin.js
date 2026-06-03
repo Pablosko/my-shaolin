@@ -21,22 +21,27 @@ router.post('/opciones', verificarToken, (req, res) => {
   res.json({ opciones });
 });
 
-router.get('/public/:name', async (req, res) => {
-  const shaolin = await db.get('SELECT s.*, u.username FROM shaolins s JOIN users u ON s.user_id = u.id WHERE LOWER(s.name) = LOWER(?)', [req.params.name]);
-  if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
+router.get('/public/:name', async (req, res, next) => {
+  try {
+    const shaolin = await db.get('SELECT s.*, u.username FROM shaolins s JOIN users u ON s.user_id = u.id WHERE LOWER(s.name) = LOWER(?)', [req.params.name]);
+    if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
 
-  shaolin.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);
-  shaolin.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
+    shaolin.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);
+    shaolin.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]) || [];
 
-  const wRow = await db.get('SELECT COUNT(*) as count FROM combates WHERE winner_id = ?', [shaolin.id]);
-  const tRow = await db.get('SELECT COUNT(*) as count FROM combates WHERE shaolin1_id = ? OR shaolin2_id = ?', [shaolin.id, shaolin.id]);
-  shaolin.wins = wRow ? wRow.count : 0;
-  shaolin.total_combates = tRow ? tRow.count : 0;
+    const wRow = await db.get('SELECT COUNT(*) as count FROM combates WHERE winner_id = ?', [shaolin.id]);
+    const tRow = await db.get('SELECT COUNT(*) as count FROM combates WHERE shaolin1_id = ? OR shaolin2_id = ?', [shaolin.id, shaolin.id]);
+    shaolin.wins = wRow ? Number(wRow.count) : 0;
+    shaolin.total_combates = tRow ? Number(tRow.count) : 0;
 
-  const qiData = aplicarSkillsYQi(shaolin);
-  Object.assign(shaolin, qiData);
+    const qiData = aplicarSkillsYQi(shaolin);
+    Object.assign(shaolin, qiData);
 
-  res.json(shaolin);
+    res.json(shaolin);
+  } catch (err) {
+    console.error('Public route error:', err);
+    next(err);
+  }
 });
 
 router.get('/ranking', async (req, res) => {

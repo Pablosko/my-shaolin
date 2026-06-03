@@ -17,13 +17,15 @@ class AppHeader {
     }
 
     container.innerHTML = `
-      <a href="/dashboard.html" class="header-logo">🥋 My Shaolin</a>
-      ${token && username ? `<span class="header-username">👤 ${escapeHtml(username)}</span>` : ''}
-      <div class="header-rankings-wrap">
-        <button class="header-rankings-btn" id="rankings-btn">🏆 Ranking</button>
-        <div class="rankings-dropdown" id="rankings-dropdown">
-          <h4>🏆 Top 10 Guerreros</h4>
-          <div id="rankings-list"></div>
+      <div class="header-left">
+        <a href="/dashboard.html" class="header-logo">🥋 My Shaolin</a>
+        ${token && username ? `<span class="header-username">👤 ${escapeHtml(username)}</span>` : ''}
+        <div class="header-rankings-wrap">
+          <button class="header-rankings-btn" id="rankings-btn">🏆 Ranking</button>
+          <div class="rankings-dropdown" id="rankings-dropdown">
+            <h4>🏆 Top 10 Guerreros</h4>
+            <div id="rankings-list"></div>
+          </div>
         </div>
       </div>
       <div class="header-right">

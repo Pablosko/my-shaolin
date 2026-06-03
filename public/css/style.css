@@ -1358,16 +1358,30 @@ input:focus, select:focus {
   border: 1px solid #4a3060;
   border-radius: 12px;
   margin: 16px 20px 0;
-  padding: 0 12px;
+  padding: 0 16px;
   position: sticky;
   top: 0;
   z-index: 100;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 52px;
-  gap: 8px;
   flex-wrap: nowrap;
   box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .app-header .header-logo {
@@ -1491,8 +1505,8 @@ input:focus, select:focus {
 
 .rankings-dropdown {
   position: absolute;
-  top: 48px;
-  right: 0;
+  top: 42px;
+  left: 0;
   width: 340px;
   background: #2d1b4e;
   border: 1px solid #4a3060;
@@ -1549,13 +1563,6 @@ input:focus, select:focus {
 .rankings-item .r-wr {
   color: #34d399;
   font-size: 12px;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
 }
 
 .header-qa {
