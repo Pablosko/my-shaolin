@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
-const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel, armas: armasData, habilidades: habilidadesData } = require('../game/data');
+const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarOpcionesRecompensa, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel, resolverArma, armas: armasData, habilidades: habilidadesData } = require('../game/data');
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.get('/', verificarToken, async (req, res) => {
   const shaolins = await db.query('SELECT * FROM shaolins WHERE user_id = ?', [req.userId]);
   const result = await Promise.all(shaolins.map(async b => {
     const habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [b.id]);
-    const armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id]);
+    const armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id])).map(resolverArma);
     const qiData = aplicarSkillsYQi({ ...b, habilidades });
     return { ...b, armas, habilidades, ...qiData };
   }));
@@ -25,7 +25,7 @@ router.get('/:id', verificarToken, async (req, res) => {
   const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
   if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
 
-  shaolin.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id]);
+  shaolin.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);
   shaolin.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
 
   const qiData = aplicarSkillsYQi(shaolin);
@@ -65,8 +65,8 @@ router.post('/', verificarToken, async (req, res) => {
     const seleccionada = opciones[indiceOpcion];
     if (seleccionada.tipo === 'arma') {
       const arma = getRandomArma();
-      await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 1)',
-        [shaolinId, arma.nombre, arma.tipo, arma.dano_min, arma.dano_max]);
+      await db.run('INSERT INTO armas (shaolin_id, nombre, nivel, equipada) VALUES (?, ?, ?, 1)',
+        [shaolinId, arma.nombre, 1]);
       item.tipo = 'arma';
       item.nombre = arma.nombre;
     } else {
@@ -80,8 +80,8 @@ router.post('/', verificarToken, async (req, res) => {
   } else {
     if (eleccion === 0) {
       const arma = getRandomArma();
-      await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 1)',
-        [shaolinId, arma.nombre, arma.tipo, arma.dano_min, arma.dano_max]);
+      await db.run('INSERT INTO armas (shaolin_id, nombre, nivel, equipada) VALUES (?, ?, ?, 1)',
+        [shaolinId, arma.nombre, 1]);
       item.tipo = 'arma';
       item.nombre = arma.nombre;
     } else if (eleccion === 1) {
@@ -137,8 +137,8 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
   const xpNeeded = 6 + shaolin.level * 2;
 
   if (opcionElegida && opcionElegida.tipo === 'arma' && opcionElegida.item) {
-    await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 0)',
-      [shaolin.id, opcionElegida.item.nombre, opcionElegida.item.tipo, opcionElegida.item.dano_min, opcionElegida.item.dano_max]);
+    await db.run('INSERT INTO armas (shaolin_id, nombre, nivel, equipada) VALUES (?, ?, ?, 0)',
+      [shaolin.id, opcionElegida.item.nombre, 1]);
   } else if (opcionElegida && opcionElegida.tipo === 'habilidad' && opcionElegida.item) {
     const existente = await db.get('SELECT id, nivel FROM habilidades WHERE shaolin_id = ? AND nombre = ?', [shaolin.id, opcionElegida.item.nombre]);
     if (existente) {
@@ -180,8 +180,8 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
     const nombresArmas = new Set(armasActuales.map(a => a.nombre));
     for (const arma of armasData) {
       if (!nombresArmas.has(arma.nombre)) {
-        await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 0)',
-          [shaolin.id, arma.nombre, arma.tipo, arma.dano_min, arma.dano_max]);
+        await db.run('INSERT INTO armas (shaolin_id, nombre, nivel, equipada) VALUES (?, ?, ?, 0)',
+          [shaolin.id, arma.nombre, 1]);
       }
     }
 
@@ -210,7 +210,7 @@ router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
   }
 
   const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [shaolin.id]);
-  shaolinFinal.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id]);
+  shaolinFinal.armas = (await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id])).map(resolverArma);
   shaolinFinal.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
 
   const qiData = aplicarSkillsYQi(shaolinFinal);

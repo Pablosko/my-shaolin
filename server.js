@@ -3,10 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-const { initDb } = require('./db/database');
+const { initDb, getClient } = require('./db/database');
+const { runMigrations } = require('./db/migrate');
 
 async function start() {
   await initDb();
+  await runMigrations(getClient());
   console.log('Database initialized');
 
   const authRoutes = require('./routes/auth');

@@ -38,6 +38,19 @@ function getRandomArma() {
   return { ...getRandomItem(armas) };
 }
 
+function resolverArma(armaDb) {
+  if (!armaDb) return null;
+  const t = armas.find(a => a.nombre === armaDb.nombre);
+  if (!t) return armaDb;
+  const bonus = ((armaDb.nivel || 1) - 1);
+  return {
+    ...armaDb,
+    tipo: t.tipo,
+    dano_min: t.dano_min + bonus,
+    dano_max: t.dano_max + bonus,
+  };
+}
+
 function getRandomHabilidad() {
   return { ...getRandomItem(habilidades) };
 }
@@ -341,7 +354,7 @@ function generarStatsOpcionesNivel() {
 
 module.exports = {
   armas, habilidades,
-  getRandomArma, getRandomHabilidad,
+  getRandomArma, getRandomHabilidad, resolverArma,
   generarStatsIniciales,
   generarBots, nombresBot,
   generarOpcionesIniciales,
