@@ -36,14 +36,6 @@ function renderSegBar(containerId, value) {
   }
 }
 
-function formatStatDiff(base, real) {
-  if (base === real) return `${base}`;
-  const diff = real - base;
-  const cls = diff > 0 ? 'stat-bonus' : 'stat-penalty';
-  const signo = diff > 0 ? '+' : '';
-  return `${real} <span class="${cls}">(${base} ${signo}${diff})</span>`;
-}
-
 async function loadShaolin() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');

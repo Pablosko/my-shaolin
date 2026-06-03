@@ -56,3 +56,11 @@ function crearAvatarImg(genero, skin) {
   };
   return img;
 }
+
+function formatStatDiff(base, real) {
+  if (base === real) return `${base}`;
+  const diff = real - base;
+  const cls = diff > 0 ? 'stat-bonus' : 'stat-penalty';
+  const signo = diff > 0 ? '+' : '';
+  return `${real} <span class="${cls}">(${base} ${signo}${diff})</span>`;
+}
