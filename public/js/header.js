@@ -10,10 +10,11 @@ class AppHeader {
     let qaHtml = '';
     if (lastShaolin) {
       const skinUrl = getSkinUrl(lastShaolin.genero, lastShaolin.skin);
-      qaHtml = `<a href="/shaolin.html?id=${lastShaolin.id}" class="header-qa" title="${lastShaolin.name}">
+      qaHtml = `<a href="/shaolin.html?id=${lastShaolin.id}" class="header-qa" title="${lastShaolin.name} - Ir al perfil">
         <img src="${skinUrl}" class="qa-avatar" onerror="this.style.display='none';this.parentElement.innerHTML+='<span class=\\'qa-avatar\\' style=\\'text-align:center;line-height:32px\\'>🥋</span>'">
         <span class="qa-name">${lastShaolin.name}</span>
-      </a>`;
+      </a>
+      <a href="/arena.html?shaolin_id=${lastShaolin.id}" class="header-nav-btn header-arena-qa" title="Ir a la arena con ${lastShaolin.name}">⚔️</a>`;
     }
 
     container.innerHTML = `
