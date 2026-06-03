@@ -8,58 +8,13 @@ Juego multijugador de artes marciales por turnos. Inspirado en El Shaolin.
 - **Base de datos**: Turso (libsql client, SQLite en la nube)
 - **Frontend**: HTML + CSS vanilla (sin frameworks)
 - **Auth**: JWT (jsonwebtoken)
-- **Hosting**: Render.com (free tier, auto-deploy desde GitHub)
+- **Hosting**: Fly.io (https://myshaolin.fly.dev)
 
-## Estructura del proyecto
+### Despliegue manual
 
+```bash
+fly deploy
 ```
-my-shaolin/
-├── server.js              # Entry point
-├── db/                    # Base de datos
-│   ├── database.js        # Wrapper sql.js (init, query, get, run)
-│   └── schema.sql         # DDL de tablas
-├── routes/                # API endpoints
-│   ├── auth.js            # POST /api/auth/register, /login
-│   ├── shaolin.js         # CRUD de guerreros (/api/shaolins)
-│   ├── combate.js         # Arena, bots, historial (/api/arena)
-│   └── admin.js           # Panel admin (/api/admin)
-├── game/                  # Lógica de juego
-│   ├── data.js            # Armas, habilidades, mascotas, bots, generación
-│   └── engine.js          # Simulación de combate (turnos, daño, defensas)
-├── middleware/
-│   └── auth.js            # JWT: generarToken, verificarToken
-├── public/                # Frontend estático
-│   ├── index.html         # Login/Register
-│   ├── dashboard.html     # Lista de guerreros
-│   ├── shaolin.html       # Detalle del guerrero
-│   ├── crear-shaolin.html # Crear guerrero
-│   ├── arena.html         # Arena / combate
-│   ├── admin.html         # Panel admin
-│   ├── css/style.css      # Estilos globales
-│   └── js/
-│       ├── api.js         # Cliente API con JWT
-│       ├── auth.js        # checkAuth, logout
-│       ├── dashboard.js   # Lista de guerreros
-│       ├── shaolin.js     # Detalle del guerrero
-│       ├── crear-shaolin.js # Creación
-│       └── combate.js     # Combate con animación
-├── docs/                  # Especificaciones técnicas
-├── .env                   # Variables de entorno (local, no se sube)
-└── public/images/skins/   # Assets gráficos (skins de personajes)
-```
-
-## Despliegue
-
-El proyecto se despliega automáticamente en **Render.com** desde GitHub.
-
-1. Subir cambios: `git push origin master`
-2. Render detecta el push y redepliega automáticamente
-3. App en: `https://my-shaolin.onrender.com`
-
-### Bases de datos
-
-La base de datos está en **Turso** (SQLite en la nube, free tier).
-Las tablas se crean automáticamente al arrancar el servidor.
 
 ### Variables de entorno
 
@@ -69,10 +24,10 @@ Las tablas se crean automáticamente al arrancar el servidor.
 | `TURSO_AUTH_TOKEN` | Token de autenticación de Turso |
 | `ADMIN_KEY` | Clave del panel admin (default: admin123) |
 
-### Hosting anterior
+### Bases de datos
 
-Anteriormente el proyecto estaba alojado en **Fly.io** con persistencia
-local de SQLite. Se migró a **Render + Turso** en junio 2026.
+La base de datos está en **Turso** (SQLite en la nube, free tier).
+Las tablas se crean automáticamente al arrancar el servidor via `db/schema.sql`.
 
 ## Admin
 

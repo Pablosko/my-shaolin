@@ -1,8 +1,7 @@
 # Base de Datos
 
-**Motor:** SQLite (vía sql.js)
-**Archivo:** `data/myshaolin.db`
-**Persistencia:** Escritura a disco después de cada escritura (`saveDb()`)
+**Motor:** Turso (libsql client, SQLite en la nube)
+**Archivo local:** `data/myshaolin.db` (solo para desarrollo local)
 **Archivo DDL:** `db/schema.sql`
 
 ---
@@ -105,28 +104,13 @@ shaolins 1──N combates (como shaolin2_id)
 ## Implementación
 
 **Archivo:** `db/database.js`
-- `initDb()` — Carga BD existente o crea nueva. Ejecuta schema.
+- `initDb()` — Crea conexión Turso. Ejecuta schema con `executeMultiple()`.
 - `query(sql, params)` — SELECT múltiple → array de objetos.
 - `get(sql, params)` — SELECT único → objeto o undefined.
 - `run(sql, params)` — INSERT/UPDATE/DELETE → `{ changes, lastInsertRowid }`.
-- `saveDb()` — Exporta BD a disco.
 
 **Archivo:** `db/schema.sql` — DDL completo con `CREATE TABLE IF NOT EXISTS`.
 
-### Migraciones aplicadas
+### Migraciones aplicadas (histórico)
 
-#### Renombre bruto → shaolin
-La tabla `brutos` fue renombrada a `shaolins`. La migración en `initDb()`:
-1. Detecta si existe `brutos` (tabla vieja).
-2. Copia todos los datos a `shaolins` via `INSERT INTO shaolins SELECT ...`.
-3. Dropea la tabla `brutos`.
-
-#### Columnas viejas (bruto_id)
-Las tablas `armas`, `habilidades` y `combates` tenían columna `bruto_id` (schema anterior).
-- `initDb()` consulta `PRAGMA table_info(armas)` para detectar si la columna se llama `bruto_id` en vez de `shaolin_id`.
-- En ese caso, dropea las tablas `armas`, `habilidades`, `combates` y `mascotas`.
-- `CREATE TABLE IF NOT EXISTS` en `schema.sql` las recrea con `shaolin_id`.
-- Los datos viejos quedan huérfanos (no hay pérdida porque solo existían jugadores de prueba).
-
-#### Nota
-`schema.sql` usa `CREATE TABLE IF NOT EXISTS` — **no modifica tablas existentes**. Por eso la migración dropea explícitamente las tablas con columnas incorrectas antes de ejecutar el schema.
+La migración de `brutos` → `shaolins` y la detección de columnas viejas (`bruto_id`) se implementaron temporalmente en la versión con SQLite local. Al migrar a **Turso** (cloud SQLite), el código de migración se eliminó porque la BD en la nube se crea desde cero con `schema.sql`. No se requiere migración adicional.
