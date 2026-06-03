@@ -46,6 +46,15 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('hp_formula_v4')`);
     console.log('Migration hp_formula_v4: max_hp = 50 + vitalidad*3 + level*2');
   }
+
+  const armasFamiliasResult = await client.execute(`SELECT name FROM _migrations WHERE name = 'v5_armas_familias'`);
+  if (armasFamiliasResult.rows.length === 0) {
+    await client.execute(`UPDATE armas SET nombre = 'Puño de Acero' WHERE nombre = 'Maza'`);
+    await client.execute(`UPDATE armas SET nombre = 'Puño de Acero Fino' WHERE nombre = 'Martillo'`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'v5_armas_familias'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('v5_armas_familias')`);
+    console.log('Migration v5_armas_familias: renamed Maza->Puño de Acero, Martillo->Puño de Acero Fino');
+  }
 }
 
 module.exports = { runMigrations };

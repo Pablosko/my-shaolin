@@ -32,7 +32,7 @@ async function loadBase() {
       <div class="base-layout">
         <div class="base-profile-card">
           <div class="bp-avatar-wrap">
-            <img src="${getSkinUrl(b.genero, b.skin)}" class="bp-avatar" style="border-color:${color}" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\\'font-size:80px;padding:10px\\'>🥋</div>'">
+            <img src="${getSkinUrl(b.genero, b.skin)}" class="bp-avatar" style="border-color:${color}" onerror="this.outerHTML='<div style=font-size:80px;padding:10px>&#x1f94b;</div>'">
           </div>
           <div class="bp-name">${escapeHtml(b.name)}</div>
           <div class="bp-owner">👤 ${escapeHtml(b.username || '')}</div>

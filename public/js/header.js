@@ -11,7 +11,7 @@ class AppHeader {
     if (lastShaolin) {
       const skinUrl = getSkinUrl(lastShaolin.genero, lastShaolin.skin);
       qaHtml = `<a href="/shaolin.html?id=${lastShaolin.id}" class="header-qa" title="${lastShaolin.name} - Ir al perfil">
-        <img src="${skinUrl}" class="qa-avatar" onerror="this.style.display='none';this.parentElement.innerHTML+='<span class=\\'qa-avatar\\' style=\\'text-align:center;line-height:32px\\'>🥋</span>'">
+        <img src="${skinUrl}" class="qa-avatar" onerror="this.outerHTML='<span class=qa-avatar style=display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--barra-fondo);font-size:16px>&#x1f94b;</span>'">
         <span class="qa-name">${lastShaolin.name}</span>
       </a>
       <a href="/arena.html?shaolin_id=${lastShaolin.id}" class="header-nav-btn header-arena-qa" title="Ir a la arena con ${lastShaolin.name}">⚔️</a>`;
@@ -66,7 +66,7 @@ class AppHeader {
           results.innerHTML = data.map(s => {
             const skinUrl = getSkinUrl(s.genero, s.skin);
             return `<div class="search-result-item" data-name="${s.name}">
-              <img src="${skinUrl}" class="sr-avatar" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:20px\\'>🥋</span>'+this.parentElement.innerHTML">
+              <img src="${skinUrl}" class="sr-avatar" onerror="this.outerHTML='<span style=font-size:20px>&#x1f94b;</span>'">
               <span class="sr-name">${s.name}</span>
               <span class="sr-meta">Nv.${s.level} · ${s.username}</span>
             </div>`;
