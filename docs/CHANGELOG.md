@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-06-03 — Sistema de armas unificado, level-up 2 pasos, migraciones automáticas
+
+### Armas: resolverArma()
+- **DB guarda solo** `nombre`, `nivel`, `equipada` — eliminados `tipo`, `dano_min`, `dano_max`
+- **`resolverArma()`** en `data.js`: resuelve stats completas desde plantilla + escala daño por nivel (`+1` por nivel)
+- Todos los endpoints que cargan armas usan `resolverArma()`: GET /shaolins, combate, level-up
+- Bot armas generadas con stats completas, no necesitan resolución
+
+### Level-up 2 pasos
+- **Paso 1**: Elegir entre 2 opciones aleatorias (40% arma, 30% habilidad, 30% stat)
+- **Paso 2**: Elegir entre 2 mejoras de stat con rareza (bronce/plata/oro)
+- `+2 HP` y `+2 max_hp` automáticos por nivel (universal)
+
+### Migraciones automáticas (`db/migrate.js`)
+- `hp_formula_v2`: suma `+2 * (level - 1)` a HP/max_hp de todos los shaolins existentes
+- `armas_drop_stats`: migra armas viejas a nueva estructura (descarta tipo/dano, agrega nivel)
+- Se ejecutan al arrancar el servidor, registradas en tabla `_migrations`
+
+### Easter eggs
+- **Pablosko**: subir nivel → stats 99/99/99/50, todas las armas, todas habilidades Nv3, nivel 99
+- **Artego7**: victoria da +4 XP (2×)
+- Mensaje especial en overlay después de level-up / combate
+
+### Bots escalados
+- `generarBot(nivel)` escalan stats con +2 HP/level
+- Recompensas aleatorias por nivel: 40% stat, 30% arma, 30% habilidad
+- Endpoint `GET /arena/bots?level={nivel}`
+- Level cap 99 previene pending_level infinito
+
+### Documentación
+- `docs/MECHANICS.md` — documento maestro con todas las mecánicas
+- `docs/TODO.md` — lista de tareas pendientes, en progreso y futuras
+- `docs/CHANGELOG.md` actualizado
+
+### Archivos modificados
+- `game/data.js` — `resolverArma()`, `generarOpcionesRecompensa()`, `generarBot(nivel)` con rewards
+- `game/engine.js` — movimiento hacia oponente, arma equipada persistente, draw/swap/drop
+- `routes/shaolin.js` — `level-up-start` devuelve 2 opciones, `level-up-confirm` recibe `opcionElegida`, armas INSERT nuevo schema
+- `routes/combate.js` — `resolverArma()` en armas, XP easter eggs, level param en bots
+- `db/schema.sql` — armas solo nombre/nivel/equipada
+- `db/migrate.js` — sistema de migraciones con dos migraciones automáticas
+- `server.js` — llama a `runMigrations()` después de `initDb()`
+- `public/js/shaolin.js` — level-up UI 2 pasos, overlay easter egg
+- `public/js/combate.js` — easter egg display, XP texto corregido, level param bots
+- `public/css/style.css` — `.stat-option-card` reutilizado, animaciones de combate
+- `docs/MECHANICS.md` — NUEVO
+- `docs/TODO.md` — NUEVO
+
 ## 2026-06-03 — Nuevo sistema de armas persistente
 
 ### Armas en combate

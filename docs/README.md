@@ -50,12 +50,13 @@ Clave maestra: `ADMIN_KEY` en env vars (por defecto: `admin123`).
 
 ## Docs relacionados
 
+- [`MECHANICS.md`](./MECHANICS.md) — **Documento maestro** con todas las mecánicas actuales
+- [`TODO.md`](./TODO.md) — Tareas pendientes, bugs y futuros features
 - [`STATS.md`](./STATS.md) — Stats, Qi, Armonía, fórmulas
 - [`COMBAT.md`](./COMBAT.md) — Sistema de combate, PA, rangos, defensas, IA
-- [`WEAPONS.md`](./WEAPONS.md) — Armas, eficacia por rango
-- [`SKILLS.md`](./SKILLS.md) — Habilidades y efectos
-- [`PETS.md`](./PETS.md) — Mascotas y comportamiento
-- [`CREATION.md`](./CREATION.md) — Creación de personaje
+- [`WEAPONS.md`](./WEAPONS.md) — Armas, eficacia por rango (obsoleto, ver MECHANICS.md)
+- [`SKILLS.md`](./SKILLS.md) — Habilidades y efectos (obsoleto, ver MECHANICS.md)
+- [`CREATION.md`](./CREATION.md) — Creación de personaje (obsoleto, ver MECHANICS.md)
 - [`API.md`](./API.md) — Endpoints de la API
-- [`DATABASE.md`](./DATABASE.md) — Esquema de base de datos
+- [`DATABASE.md`](./DATABASE.md) — Esquema de base de datos (obsoleto, ver MECHANICS.md)
 - [`IMAGES.md`](./IMAGES.md) — Sistema de skins e imágenes
