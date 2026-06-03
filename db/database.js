@@ -46,4 +46,4 @@ async function exec(sql) {
   await getClient().execute(sql);
 }
 
-module.exports = { initDb, query, get, run, exec };
+module.exports = { initDb, getClient, query, get, run, exec };
