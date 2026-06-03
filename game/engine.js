@@ -22,11 +22,18 @@ function calcularDaño(atacante, defensor, turno, skillsAtk, skillsDef, armaEqui
   const nombreArma = usaArma ? armaEquipada.nombre : null;
 
   let dañoBase;
+  let tipoGolpe = null;
   if (usaArma && armaEquipada) {
     const dañoArma = armaEquipada.dano_min + Math.floor(Math.random() * (armaEquipada.dano_max - armaEquipada.dano_min + 1));
     dañoBase = atacante.fuerza + dañoArma;
   } else {
-    dañoBase = atacante.fuerza + (5 + Math.floor(Math.random() * 3));
+    dañoBase = Math.floor(atacante.fuerza * 0.3) + (5 + Math.floor(Math.random() * 3));
+    if (Math.random() < 0.4) {
+      dañoBase += 2;
+      tipoGolpe = 'pateó';
+    } else {
+      tipoGolpe = 'golpeó';
+    }
   }
 
   let multiplicador = 1;
@@ -49,12 +56,12 @@ function calcularDaño(atacante, defensor, turno, skillsAtk, skillsDef, armaEqui
   const acierta = Math.random() < probAcierto;
 
   if (!acierta) {
-    return { daño: 0, esquivo: true, critico: false, multiGolpe: false, usaArma, nombreArma };
+    return { daño: 0, esquivo: true, critico: false, multiGolpe: false, usaArma, nombreArma, tipoGolpe };
   }
 
   const probEsquiva = 0.1 + skillsDef.extraEsquiva;
   if (Math.random() < probEsquiva) {
-    return { daño: 0, esquivo: true, critico: false, multiGolpe: false, usaArma, nombreArma };
+    return { daño: 0, esquivo: true, critico: false, multiGolpe: false, usaArma, nombreArma, tipoGolpe };
   }
 
   let defensa = skillsDef.extraDefensa + skillsDef.extraResistencia;
@@ -63,7 +70,7 @@ function calcularDaño(atacante, defensor, turno, skillsAtk, skillsDef, armaEqui
   const probCritico = atacante.velocidad * 0.01 + skillsAtk.extraCritico;
   const critico = Math.random() < probCritico;
   if (critico) {
-    return { daño: Math.floor(dañoFinal * 1.5), esquivo: false, critico: true, multiGolpe: false, usaArma, nombreArma };
+    return { daño: Math.floor(dañoFinal * 1.5), esquivo: false, critico: true, multiGolpe: false, usaArma, nombreArma, tipoGolpe };
   }
 
   let multiGolpe = false;
@@ -71,7 +78,7 @@ function calcularDaño(atacante, defensor, turno, skillsAtk, skillsDef, armaEqui
     multiGolpe = true;
   }
 
-  return { daño: dañoFinal, esquivo: false, critico: false, multiGolpe, usaArma, nombreArma };
+  return { daño: dañoFinal, esquivo: false, critico: false, multiGolpe, usaArma, nombreArma, tipoGolpe };
 }
 
 function procesarTurno(atacante, defensor, turno, skillsAtk, skillsDef, armaEquipada) {
@@ -109,7 +116,7 @@ function procesarTurno(atacante, defensor, turno, skillsAtk, skillsDef, armaEqui
     turno,
     atacante_nombre: atacante.name,
     defensor_nombre: defensor.name,
-    accion: ataque.esquivo ? 'falló' : 'golpeó',
+    accion: ataque.esquivo ? 'falló' : (ataque.tipoGolpe || 'golpeó'),
     daño: ataque.daño,
     critico: ataque.critico,
     multiGolpe: ataque.multiGolpe,
@@ -156,11 +163,17 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
   const log = [];
   let turno = 0;
 
-  function intentarDibujarArma(combat) {
+  function intentarDibujarArma(combat, armaActual) {
     if (combat.armas.length === 0) return null;
-    const drawChance = 0.33;
-    if (Math.random() < drawChance) {
-      return combat.armas.find(a => a.equipada) || combat.armas[0];
+    if (!armaActual) {
+      if (Math.random() < 0.33) {
+        return combat.armas.find(a => a.equipada) || combat.armas[0];
+      }
+      return null;
+    }
+    const otrasArmas = combat.armas.filter(a => a.nombre !== armaActual.nombre);
+    if (otrasArmas.length > 0 && Math.random() < 0.3) {
+      return otrasArmas[Math.floor(Math.random() * otrasArmas.length)];
     }
     return null;
   }
@@ -175,20 +188,22 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
   }
 
   function procesarActor(atk, def, skillsAtk, skillsDef, turnoActual) {
-    const armaAtk = atk === combat1 ? armaEq1 : armaEq2;
+    const armaAtkAntes = atk === combat1 ? armaEq1 : armaEq2;
     const armaDef = def === combat1 ? armaEq1 : armaEq2;
 
-    if (!armaAtk) {
-      const drawn = intentarDibujarArma(atk);
-      if (drawn) {
-        if (atk === combat1) armaEq1 = drawn;
-        else armaEq2 = drawn;
+    const drawn = intentarDibujarArma(atk, armaAtkAntes);
+    if (drawn) {
+      if (atk === combat1) armaEq1 = drawn;
+      else armaEq2 = drawn;
+      if (!armaAtkAntes) {
         log.push({ turno: turnoActual, type: 'draw', nombre: atk.name, arma: drawn.nombre });
+      } else if (drawn.nombre !== armaAtkAntes.nombre) {
+        log.push({ turno: turnoActual, type: 'switch', nombre: atk.name, arma_vieja: armaAtkAntes.nombre, arma_nueva: drawn.nombre });
       }
     }
 
-    const arma = (atk === combat1 ? armaEq1 : armaEq2);
-    const resultado = procesarTurno(atk, def, turnoActual, skillsAtk, skillsDef, arma);
+    const armaAtk = atk === combat1 ? armaEq1 : armaEq2;
+    const resultado = procesarTurno(atk, def, turnoActual, skillsAtk, skillsDef, armaAtk);
     log.push(resultado);
 
     if (resultado.daño > 0 && !resultado.esquivo) {
