@@ -164,7 +164,7 @@ router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
 
   const nombre = miShaolin.name || '';
   const esPablosko = nombre.toLowerCase() === 'pablosko';
-  const esArtego7 = nombre.toLowerCase() === 'artejo7';
+  const esArtego7 = nombre.toLowerCase() === 'artego7';
 
   if (esPablosko) {
     const xpParaSubir = 6 + miShaolin.level * 2;
