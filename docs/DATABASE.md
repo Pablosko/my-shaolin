@@ -112,3 +112,21 @@ shaolins 1──N combates (como shaolin2_id)
 - `saveDb()` — Exporta BD a disco.
 
 **Archivo:** `db/schema.sql` — DDL completo con `CREATE TABLE IF NOT EXISTS`.
+
+### Migraciones aplicadas
+
+#### Renombre bruto → shaolin
+La tabla `brutos` fue renombrada a `shaolins`. La migración en `initDb()`:
+1. Detecta si existe `brutos` (tabla vieja).
+2. Copia todos los datos a `shaolins` via `INSERT INTO shaolins SELECT ...`.
+3. Dropea la tabla `brutos`.
+
+#### Columnas viejas (bruto_id)
+Las tablas `armas`, `habilidades` y `combates` tenían columna `bruto_id` (schema anterior).
+- `initDb()` consulta `PRAGMA table_info(armas)` para detectar si la columna se llama `bruto_id` en vez de `shaolin_id`.
+- En ese caso, dropea las tablas `armas`, `habilidades`, `combates` y `mascotas`.
+- `CREATE TABLE IF NOT EXISTS` en `schema.sql` las recrea con `shaolin_id`.
+- Los datos viejos quedan huérfanos (no hay pérdida porque solo existían jugadores de prueba).
+
+#### Nota
+`schema.sql` usa `CREATE TABLE IF NOT EXISTS` — **no modifica tablas existentes**. Por eso la migración dropea explícitamente las tablas con columnas incorrectas antes de ejecutar el schema.

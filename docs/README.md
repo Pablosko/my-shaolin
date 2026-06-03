@@ -5,10 +5,10 @@ Juego multijugador de artes marciales por turnos. Inspirado en El Shaolin.
 ## Stack
 
 - **Servidor**: Node.js + Express
-- **Base de datos**: SQLite (sql.js) con persistencia a archivo
+- **Base de datos**: Turso (libsql client, SQLite en la nube)
 - **Frontend**: HTML + CSS vanilla (sin frameworks)
 - **Auth**: JWT (jsonwebtoken)
-- **Hosting**: Fly.io (free tier, volumen persistente)
+- **Hosting**: Render.com (free tier, auto-deploy desde GitHub)
 
 ## Estructura del proyecto
 
@@ -44,16 +44,35 @@ my-shaolin/
 │       ├── crear-shaolin.js # Creación
 │       └── combate.js     # Combate con animación
 ├── docs/                  # Especificaciones técnicas
-└── fly.toml               # Config Fly.io
+├── .env                   # Variables de entorno (local, no se sube)
+└── public/images/skins/   # Assets gráficos (skins de personajes)
 ```
 
 ## Despliegue
 
-```bash
-fly deploy
-```
+El proyecto se despliega automáticamente en **Render.com** desde GitHub.
 
-App en: https://myshaolin.fly.dev/
+1. Subir cambios: `git push origin master`
+2. Render detecta el push y redepliega automáticamente
+3. App en: `https://my-shaolin.onrender.com`
+
+### Bases de datos
+
+La base de datos está en **Turso** (SQLite en la nube, free tier).
+Las tablas se crean automáticamente al arrancar el servidor.
+
+### Variables de entorno
+
+| Variable | Descripción |
+|----------|-------------|
+| `TURSO_DB_URL` | URL de la base de datos Turso |
+| `TURSO_AUTH_TOKEN` | Token de autenticación de Turso |
+| `ADMIN_KEY` | Clave del panel admin (default: admin123) |
+
+### Hosting anterior
+
+Anteriormente el proyecto estaba alojado en **Fly.io** con persistencia
+local de SQLite. Se migró a **Render + Turso** en junio 2026.
 
 ## Admin
 
@@ -82,3 +101,4 @@ Clave maestra: `ADMIN_KEY` en env vars (por defecto: `admin123`).
 - [`CREATION.md`](./CREATION.md) — Creación de personaje
 - [`API.md`](./API.md) — Endpoints de la API
 - [`DATABASE.md`](./DATABASE.md) — Esquema de base de datos
+- [`IMAGES.md`](./IMAGES.md) — Sistema de skins e imágenes

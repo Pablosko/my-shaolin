@@ -166,3 +166,19 @@ Eliminar un guerrero y sus datos asociados.
 ### GET /combates
 
 Últimos 50 combates con nombres de los participantes.
+
+### Error handling
+Todos los errores de rutas bajo `/api` devuelven JSON en vez de HTML:
+
+```json
+// HTTP 500
+{ "error": "Error interno del servidor" }
+```
+
+Implementado con middleware global en `server.js`:
+```js
+app.use('/api', (err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
+```

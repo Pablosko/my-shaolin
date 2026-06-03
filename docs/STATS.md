@@ -212,3 +212,21 @@ A nivel 1 las stats son fijas según el género, más 1 punto extra aleatorio:
 - `routes/combate.js:124-130` — Subida de nivel (incremento de stats)
 
 **Tabla BD:** `shaolins` tiene columnas: `hp`, `max_hp`, `fuerza`, `agilidad`, `velocidad`, `level`, `xp`.
+
+### Ajustes aplicados
+
+#### Precisión de golpe (reemplaza esquiva pura)
+La probabilidad de acierto se calcula como:
+```js
+probAcierto = clamp(0.20, 0.98, 0.85 + (atacante.agilidad - defensor.agilidad) * 0.02)
+```
+- Antes: ~52% base de acierto vs. dodge puro de ~45%.
+- Ahora: 85% base, la agilidad del atacante aumenta y la del defensor reduce.
+- La esquiva como habilidad (10% base) se mantiene como capa separada en `engine.js`.
+
+#### Barras de stat — visualización
+- **10 segmentos fijos** por barra (sin importar el valor de la stat).
+- Color por posición: 1 (izquierda) = verde, 10 (derecha) = rojo, gradiente entre medias.
+- Se llenan `Math.min(valor, 10)` segmentos. Valores >10 no dibujan más allá del segmento 10.
+- **HP no tiene barra**: solo muestra ❤️ + número.
+- Implementado en `public/js/shaolin.js:renderSegBar()`, CSS en `public/css/style.css`.

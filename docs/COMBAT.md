@@ -221,6 +221,37 @@ El servidor devuelve un array de eventos reproducibles:
 - Esquiva, crítico, contraataque, mascotas
 - Máximo 50 turnos
 
+### Cambios aplicados al sistema actual
+
+#### Precisión de golpe (dodge nerf)
+```js
+probAcierto = clamp(0.20, 0.98, 0.85 + (atacante.agilidad - defensor.agilidad) * 0.02)
+```
+85% base de acierto. La diferencia de agilidad modifica ±2% por punto. Antes era ~52% base.
+
+#### Uso de armas en combate
+```js
+probUsarArma = Math.min(0.85, 0.25 + atacante.agilidad * 0.02)
+```
+- Por cada ataque, se tira probabilidad de usar arma vs puños.
+- Si usa arma, se suma daño del arma al daño base.
+
+#### UI de armas en combate
+- **Weapon reserve**: en `public/arena.html`, div `.weapon-reserve` en la esquina superior derecha de cada cuadrado de luchador. Muestra todas las armas del inventario como badges (`🗡️ Espadón`).
+- **Weapon equipped**: div `.weapon-equipada` oculto bajo el nombre del luchador. Cuando un ataque usa arma, aparece `⚔️ [NombreArma]` con fadeIn; se oculta al inicio del siguiente turno.
+- Estilos en `public/css/style.css`: `.weapon-reserve`, `.weapon-equipada`.
+
+#### Mensajes de daño
+- Daño con arma: `X golpeó a Y -5HP con Espadón`
+- Daño sin arma (puños): `X golpeó a Y -5HP con puños`
+- Implementado en `public/js/combate.js` — `renderResultadoVisual()` y `renderResultadoDirecto()`.
+
+#### Archivos modificados
+- `game/engine.js` — fórmula de `probAcierto` y `probUsarArma`
+- `public/js/combate.js` — weapon badge show/hide, mensajes de daño
+- `public/arena.html` — estructura con weapon-reserve / weapon-equipada
+- `public/css/style.css` — estilos de armas en combate
+
 **Sistema nuevo (especificado arriba):**
 - Rangos 0-4
 - PA por turno
