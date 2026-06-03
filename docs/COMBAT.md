@@ -206,93 +206,48 @@ El servidor devuelve un array de eventos reproducibles:
 ]
 ```
 
-## Implementación actual
+## Implementación actual (Fase 2)
 
 **Archivos:**
-- `game/engine.js` — `simularCombate()`, `procesarTurno()`, `calcularDaño()`
-- `routes/combate.js` — Endpoint `POST /api/arena/combatir/:oponente_id`
-- `public/js/combate.js` — `reproducirCombate()`, animación con delays
+- `game/engine.js` — `simularCombate()`, `procesarActor()`, `procesarAtaque()`, `intentarDibujar()`
+- `routes/combate.js` — Endpoint `POST /api/combatir/:oponente_id`
+- `public/js/combate.js` — reproductor de eventos, animación horizontal, UI de armas/PA/rango
 
-**Sistema actual (simplificado):**
-- Sin rangos (distancia fija)
-- Sin PA (un ataque por turno por luchador)
-- El que tiene más velocidad ataca primero
-- Daño: fuerza + arma, modificado por habilidades
-- Esquiva, crítico, contraataque, mascotas
-- Máximo 50 turnos
+**Sistema actual:**
+- **Rangos 0-4** con movimiento por turno (coste 25-75 PA)
+- **PA por turno**: `clamp(100, 250, 100 + floor(sqrt(velocidad) * 12))`
+- **Movimiento**: el combatiente se acerca si está fuera de rango de ataque
+- **Sistema de armas persistente**: 33% draw/turno, 30% swap, 1-5% drop al recibir daño
+- **Daño puño**: `floor(fuerza * 0.3) + 5-7` (golpe) / `+ 7-9` (patada, 40%)
+- **Daño arma**: `fuerza + (dano_min ~ dano_max) * rangoEffect`
+- **Precisión**: `clamp(20, 98, 85 + (agi_atk - agi_def) * 2)%`
+- **Esquiva**: 10% base + skill
+- **Crítico**: `velocidad * 1% + skill`
+- **Contraataque**: por skill
+- **Robo de vida**: por skill y Qi
+- **Defensa/resistencia**: por skill
+- **Normalización de armas**: en carga de combate contra `data.js`
+- **Exposición**: evento informativo cuando rango ≤ 1
+- **Máximo 50 turnos** (determinado por HP restante)
 
-### Cambios aplicados al sistema actual
+### Eventos generados
 
-#### Precisión de golpe (dodge nerf)
-```js
-probAcierto = clamp(0.20, 0.98, 0.85 + (atacante.agilidad - defensor.agilidad) * 0.02)
-```
-85% base de acierto. La diferencia de agilidad modifica ±2% por punto. Antes era ~52% base.
-
-#### Uso de armas en combate
-```js
-probUsarArma = Math.min(0.85, 0.25 + atacante.agilidad * 0.02)
-```
-- Por cada ataque, se tira probabilidad de usar arma vs puños.
-- Si usa arma, se suma daño del arma al daño base.
-
-#### UI de armas en combate
-- **Weapon reserve**: en `public/arena.html`, div `.weapon-reserve` en la esquina superior derecha de cada cuadrado de luchador. Muestra todas las armas del inventario como badges (`🗡️ Espadón`).
-- **Weapon equipped**: div `.weapon-equipada` oculto bajo el nombre del luchador. Cuando un ataque usa arma, aparece `⚔️ [NombreArma]` con fadeIn; se oculta al inicio del siguiente turno.
-- Estilos en `public/css/style.css`: `.weapon-reserve`, `.weapon-equipada`.
-
-#### Mensajes de daño
-- Daño con arma: `X golpeó a Y -5HP con Espadón`
-- Daño sin arma (puños): `X golpeó a Y -5HP con puños`
-- Implementado en `public/js/combate.js` — `renderResultadoVisual()` y `renderResultadoDirecto()`.
-
-#### Archivos modificados
-- `game/engine.js` — fórmula de `probAcierto` y `probUsarArma`
-- `public/js/combate.js` — weapon badge show/hide, mensajes de daño
-- `public/arena.html` — estructura con weapon-reserve / weapon-equipada
-- `public/css/style.css` — estilos de armas en combate
-
-### Nuevo sistema de armas (persistente)
-
-#### Draw por turno
-```js
-drawChance = 0.33  // 33% fijo por turno
-```
-- Al inicio del turno del combatiente, si no tiene `arma_equipada` y tiene armas en inventario, tira esta probabilidad.
-- Si acierta: se asigna `arma_equipada`, se emite evento `{ type: 'draw', nombre, arma }`.
-- Si falla: ataca con puños este turno, reintenta el próximo.
-
-#### Estado persistente
-- Una vez dibujada, el arma permanece equipada indefinidamente.
-- Todos los ataques usan el arma hasta que se pierde.
-
-#### Pérdida de arma
-```js
-probPerder = min(0.05, daño / max_hp * 0.05)
-```
-- Cuando un combatiente recibe daño, ~1-5% de probabilidad de soltar el arma.
-- Se emite `{ type: 'drop', nombre, arma }`.
-- `arma_equipada` vuelve a `null`. Puede volver a dibujar en turnos siguientes.
-
-#### Daño base
-- **Puño**: `fuerza + (5 + random 0-2)` → 5-7 + fuerza.
-- **Arma**: `fuerza + (dano_min~dano_max)` del arma (ej: Espadón 9-15, Martillo 10-17).
-
-#### Normalización de armas existentes
-- Las armas guardadas en BD con valores viejos se normalizan al cargar el combate.
-- `routes/combate.js`: `normalizarDañoArma()` busca el arma por nombre en `data.js` y sobreescribe `dano_min`/`dano_max`.
-
-#### Implementación
-- `game/engine.js` — `simularCombate()` maneja estado `armaEq1`/`armaEq2`, funciones `intentarDibujarArma()` e `intentarPerderArma()`. `calcularDaño()` recibe `armaEquipada`.
-- `game/data.js` — armas con daño aumentado (6-10 mínimo).
-- `routes/combate.js` — normaliza daño de armas viejas vía `normalizarDañoArma()`.
-- `public/js/combate.js` — `renderResultadoVisual()` y `renderResultadoDirecto()` manejan `type: 'draw'` y `type: 'drop'`.
-
-**Sistema nuevo (especificado arriba):**
-- Rangos 0-4
-- PA por turno
-- Qi y Armonía
-- Stats relativas
-- Armas con eficacia por rango
-- IA automática priorizada
-- Eventos frontend tipados
+| type | data |
+|------|------|
+| `combat_start` | rango, rangoNombre |
+| `turn_start` | turno |
+| `pa` | actor, pa |
+| `draw_weapon` | actor, arma |
+| `switch_weapon` | actor, arma_vieja, arma_nueva |
+| `move` | actor, from, to, cost, retrocede (false al acercarse) |
+| `range_change` | rango, nombre |
+| `hit` | actor, target, damage, accion, conArma, nombreArma |
+| `critical_hit` | actor, target, damage, accion, conArma, nombreArma |
+| `miss` | actor, target, accion |
+| `dodge` | actor |
+| `counter_hit` | actor, target, damage |
+| `drop_weapon` | actor, arma |
+| `life_steal` | actor, amount |
+| `hp_update` | actor, hp, maxHp |
+| `exposed` | actor (rango ≤ 1) |
+| `combat_end` | winner, nombre |

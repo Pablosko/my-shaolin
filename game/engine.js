@@ -242,9 +242,6 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
       break;
     }
 
-    if (rango <= 1) {
-      e('exposed', { actor: 'Ninguno', mensaje: 'Distancia corta, combate intenso' });
-    }
   }
 
   while (turno < MAX_TURNOS) {
@@ -264,6 +261,10 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
 
     procesarActor(p2, p1, p2 === c1 ? s1 : s2, p2 === c1 ? s2 : s1);
     if (p1.hp_actual <= 0) { e('hp_update', { actor: p1.name, hp: 0, maxHp: p1.max_hp }); break; }
+
+    if (rango <= 1) {
+      e('exposed', { mensaje: 'Distancia corta, combate intenso' });
+    }
   }
 
   const winner = c1.hp_actual > c2.hp_actual ? b1.id : b2.id;
