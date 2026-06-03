@@ -1,71 +1,49 @@
-const initSqlJs = require('sql.js');
+const { createClient } = require('@libsql/client');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
-const DB_PATH = path.join(__dirname, '..', 'data', 'elbruto.db');
-
-const dir = path.dirname(DB_PATH);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-}
-
-let db = null;
+let client = null;
 
 async function initDb() {
-  const SQL = await initSqlJs();
-
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-  }
+  client = createClient({
+    url: process.env.TURSO_DB_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
 
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-  db.run(schema);
-  saveDb();
-  return db;
+  await client.executeMultiple(schema);
+
+  return client;
 }
 
-function saveDb() {
-  if (!db) return;
-  const data = db.export();
-  fs.writeFileSync(DB_PATH, Buffer.from(data));
+function getClient() {
+  if (!client) throw new Error('Database not initialized');
+  return client;
 }
 
-function query(sql, params = []) {
-  const stmt = db.prepare(sql);
-  if (params.length > 0) stmt.bind(params);
-  const rows = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return rows;
+async function query(sql, params = []) {
+  const result = await getClient().execute({ sql, args: params });
+  return result.rows.map(row =>
+    Object.fromEntries(result.columns.map((col, i) => [col, row[i]]))
+  );
 }
 
-function get(sql, params = []) {
-  const rows = query(sql, params);
-  return rows.length > 0 ? rows[0] : undefined;
+async function get(sql, params = []) {
+  const rows = await query(sql, params);
+  return rows[0];
 }
 
-function run(sql, params = []) {
-  const stmt = db.prepare(sql);
-  if (params.length > 0) stmt.bind(params);
-  stmt.step();
-  stmt.free();
-  const changes = db.getRowsModified();
-  const lastId = db.exec("SELECT last_insert_rowid() as id");
-  saveDb();
+async function run(sql, params = []) {
+  const result = await getClient().execute({ sql, args: params });
   return {
-    changes,
-    lastInsertRowid: lastId[0] ? lastId[0].values[0][0] : null,
+    changes: result.rowsAffected,
+    lastInsertRowid: result.lastInsertRowid ? Number(result.lastInsertRowid) : null,
   };
 }
 
-function exec(sql) {
-  db.run(sql);
-  saveDb();
+async function exec(sql) {
+  await getClient().execute(sql);
 }
 
-module.exports = { initDb, query, get, run, exec, saveDb };
+module.exports = { initDb, query, get, run, exec };

@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'elbruto_secret_2024_motion_twin_clone';
+const JWT_SECRET = process.env.JWT_SECRET || 'myshaolin_secret_2024_shaolin_temple';
 
 function generarToken(userId) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });

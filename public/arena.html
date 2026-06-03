@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arena - My Shaolin</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=4">
 </head>
 <body>
   <div class="header">
@@ -20,7 +20,7 @@
     <div id="seleccion-oponentes">
       <div class="card">
         <h2>⚔️ Elige un oponente</h2>
-        <p style="color:#8b6fa0;margin-bottom:16px">Combates disponibles hoy: <span id="combates-restantes">3</span> / 3</p>
+        <p style="color:#8b6fa0;margin-bottom:16px">Combates disponibles hoy: <span id="combates-restantes">500</span> / 500</p>
         <div id="oponentes-lista" class="oponentes-lista"></div>
       </div>
     </div>
@@ -30,10 +30,35 @@
       <div class="card combate-screen">
         <h2>⚔️ COMBATE</h2>
 
-        <div class="combatientes">
-          <div id="mi-bruto-info"></div>
-          <div class="vs">VS</div>
-          <div id="oponente-combate"></div>
+        <!-- Campo de batalla visual -->
+        <div class="campo-batalla" id="campo-batalla">
+          <div class="luchador-col" id="luchador-mi">
+            <div class="luchador-header">
+              <div class="luchador-avatar" id="mi-avatar">👨</div>
+              <div class="weapon-reserve" id="mi-weapons"></div>
+            </div>
+            <div class="luchador-nombre" id="mi-nombre">-</div>
+            <div class="weapon-equipada hidden" id="mi-equipada"></div>
+            <div class="hp-contenedor">
+              <div class="hp-barra-ext"><div class="hp-relleno hp-verde" id="mi-hp-relleno"></div></div>
+              <span class="hp-texto" id="mi-hp-texto">-</span>
+            </div>
+          </div>
+
+          <div class="vs-medio">⚔️</div>
+
+          <div class="luchador-col" id="luchador-op">
+            <div class="luchador-header">
+              <div class="luchador-avatar" id="op-avatar">🤖</div>
+              <div class="weapon-reserve" id="op-weapons"></div>
+            </div>
+            <div class="luchador-nombre" id="op-nombre">-</div>
+            <div class="weapon-equipada hidden" id="op-equipada"></div>
+            <div class="hp-contenedor">
+              <div class="hp-barra-ext"><div class="hp-relleno hp-rojo" id="op-hp-relleno"></div></div>
+              <span class="hp-texto" id="op-hp-texto">-</span>
+            </div>
+          </div>
         </div>
 
         <div id="log-combate" class="log-combate"></div>
@@ -47,8 +72,8 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2"></script>
-  <script src="/js/auth.js?v=2"></script>
-  <script src="/js/combate.js?v=2"></script>
+  <script src="/js/api.js?v=5"></script>
+  <script src="/js/auth.js?v=5"></script>
+  <script src="/js/combate.js?v=5"></script>
 </body>
 </html>

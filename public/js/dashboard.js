@@ -1,44 +1,43 @@
-async function loadBrutos() {
+async function loadShaolins() {
   try {
-    const brutos = await API.get('/brutos');
-    const container = document.getElementById('brutos-container');
+    const shaolins = await API.get('/shaolins');
+    const container = document.getElementById('shaolins-container');
     const username = localStorage.getItem('username');
 
     document.getElementById('user-name').textContent = username;
 
     container.innerHTML = '';
 
-    brutos.forEach(b => {
-      const avatar = b.genero === 'femenino' ? '👩' : '👨';
-      const color = b.genero === 'femenino' ? '#e879f9' : '#60a5fa';
+    shaolins.forEach(b => {
+      const color = getColor(b.genero);
 
       const card = document.createElement('div');
-      card.className = 'bruto-card';
+      card.className = 'shaolin-card';
       card.innerHTML = `
-        <div class="bruto-avatar" style="background: ${color}20; border: 2px solid ${color}">
-          ${avatar}
+        <div class="shaolin-avatar" style="background: ${color}20; border: 2px solid ${color}">
         </div>
-        <div class="bruto-name">${b.name}</div>
-        <div class="bruto-level">Nivel ${b.level} · ${b.genero === 'femenino' ? '♀' : '♂'}</div>
-        <div class="bruto-stats">
+        <div class="shaolin-name">${b.name}</div>
+        <div class="shaolin-level">Nivel ${b.level} · ${b.genero === 'femenino' ? '♀' : '♂'}</div>
+        <div class="shaolin-stats">
           <span>❤️ HP <b>${b.hp}/${b.max_hp}</b></span>
           <span>💪 Fuerza <b>${b.fuerza}</b></span>
           <span>🏃 Agilidad <b>${b.agilidad}</b></span>
           <span>⚡ Velocidad <b>${b.velocidad}</b></span>
         </div>
       `;
+      card.querySelector('.shaolin-avatar').appendChild(crearAvatarImg(b.genero, b.skin));
       card.addEventListener('click', () => {
-        window.location.href = `/bruto.html?id=${b.id}`;
+        window.location.href = `/shaolin.html?id=${b.id}`;
       });
       container.appendChild(card);
     });
 
-    if (brutos.length < 3) {
+    if (shaolins.length < 3) {
       const nuevoCard = document.createElement('div');
-      nuevoCard.className = 'nuevo-bruto-card';
+      nuevoCard.className = 'nuevo-shaolin-card';
       nuevoCard.innerHTML = '➕<br>Nuevo Guerrero';
       nuevoCard.addEventListener('click', () => {
-        window.location.href = '/crear-bruto.html';
+        window.location.href = '/crear-shaolin.html';
       });
       container.appendChild(nuevoCard);
     }
@@ -54,5 +53,5 @@ async function loadBrutos() {
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
-  loadBrutos();
+  loadShaolins();
 });

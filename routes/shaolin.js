@@ -1,0 +1,190 @@
+const express = require('express');
+const db = require('../db/database');
+const { verificarToken } = require('../middleware/auth');
+const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcionesIniciales, generarRewardNivel, generarStatsOpcionesNivel, aplicarSkillsYQi, getValorHabilidadPorNivel } = require('../game/data');
+
+const router = express.Router();
+
+router.get('/', verificarToken, async (req, res) => {
+  const shaolins = await db.query('SELECT * FROM shaolins WHERE user_id = ?', [req.userId]);
+  const result = await Promise.all(shaolins.map(async b => {
+    const habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [b.id]);
+    const armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id]);
+    const qiData = aplicarSkillsYQi({ ...b, habilidades });
+    return { ...b, armas, habilidades, ...qiData };
+  }));
+  res.json(result);
+});
+
+router.post('/opciones', verificarToken, (req, res) => {
+  const opciones = generarOpcionesIniciales();
+  res.json({ opciones });
+});
+
+router.get('/:id', verificarToken, async (req, res) => {
+  const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
+  if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
+
+  shaolin.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id]);
+  shaolin.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
+
+  const qiData = aplicarSkillsYQi(shaolin);
+  Object.assign(shaolin, qiData);
+
+  res.json(shaolin);
+});
+
+router.post('/', verificarToken, async (req, res) => {
+  const { name, genero, indiceOpcion, opciones, eleccion, skin } = req.body;
+
+  if (!name || !genero || (indiceOpcion === undefined && eleccion === undefined) || (indiceOpcion !== undefined && !opciones)) {
+    return res.status(400).json({ error: 'Nombre, género y selección son requeridos' });
+  }
+
+  if (!['masculino', 'femenino'].includes(genero)) {
+    return res.status(400).json({ error: 'Género inválido' });
+  }
+
+  const count = await db.get('SELECT COUNT(*) as count FROM shaolins WHERE user_id = ?', [req.userId]);
+  if (count.count >= 3) {
+    return res.status(400).json({ error: 'Máximo 3 shaolins por cuenta' });
+  }
+
+  const stats = generarStatsIniciales(genero);
+  const skinFinal = skin && skin !== 'default' ? skin : 'default';
+
+  const result = await db.run(
+    'INSERT INTO shaolins (user_id, name, genero, skin, hp, max_hp, fuerza, agilidad, velocidad, vitalidad) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [req.userId, name, genero, skinFinal, stats.hp, stats.max_hp, stats.fuerza, stats.agilidad, stats.velocidad, stats.vitalidad || 0]
+  );
+
+  const shaolinId = result.lastInsertRowid;
+  const item = {};
+
+  if (indiceOpcion !== undefined && opciones) {
+    const seleccionada = opciones[indiceOpcion];
+    if (seleccionada.tipo === 'arma') {
+      const arma = getRandomArma();
+      await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 1)',
+        [shaolinId, arma.nombre, arma.tipo, arma.dano_min, arma.dano_max]);
+      item.tipo = 'arma';
+      item.nombre = arma.nombre;
+    } else {
+      const hab = getRandomHabilidad();
+      await db.run('INSERT INTO habilidades (shaolin_id, nombre, descripcion, efecto, nivel) VALUES (?, ?, ?, ?, 1)',
+        [shaolinId, hab.nombre, hab.descripcion, hab.efecto]);
+      item.tipo = 'habilidad';
+      item.nombre = hab.nombre;
+      item.descripcion = hab.descripcion;
+    }
+  } else {
+    if (eleccion === 0) {
+      const arma = getRandomArma();
+      await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 1)',
+        [shaolinId, arma.nombre, arma.tipo, arma.dano_min, arma.dano_max]);
+      item.tipo = 'arma';
+      item.nombre = arma.nombre;
+    } else if (eleccion === 1) {
+      const hab = getRandomHabilidad();
+      await db.run('INSERT INTO habilidades (shaolin_id, nombre, descripcion, efecto, nivel) VALUES (?, ?, ?, ?, 1)',
+        [shaolinId, hab.nombre, hab.descripcion, hab.efecto]);
+      item.tipo = 'habilidad';
+      item.nombre = hab.nombre;
+      item.descripcion = hab.descripcion;
+    } else {
+      const hab = getRandomHabilidad();
+      await db.run('INSERT INTO habilidades (shaolin_id, nombre, descripcion, efecto, nivel) VALUES (?, ?, ?, ?, 1)',
+        [shaolinId, hab.nombre, hab.descripcion, hab.efecto]);
+      item.tipo = 'habilidad';
+      item.nombre = hab.nombre;
+      item.descripcion = hab.descripcion;
+    }
+  }
+
+  const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ?', [shaolinId]);
+  if (!shaolin) {
+    return res.status(500).json({ error: 'Error al crear el shaolin' });
+  }
+  shaolin.item = item;
+  res.json(shaolin);
+});
+
+router.post('/:id/equipar-arma', verificarToken, async (req, res) => {
+  const { arma_id } = req.body;
+  const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
+  if (!shaolin) return res.status(404).json({ error: 'Shaolin no encontrado' });
+
+  await db.run('UPDATE armas SET equipada = 0 WHERE shaolin_id = ?', [shaolin.id]);
+  await db.run('UPDATE armas SET equipada = 1 WHERE id = ? AND shaolin_id = ?', [arma_id, shaolin.id]);
+  res.json({ ok: true });
+});
+
+router.post('/:id/level-up-start', verificarToken, async (req, res) => {
+  const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ? AND pending_level = 1', [req.params.id, req.userId]);
+  if (!shaolin) return res.status(400).json({ error: 'No hay nivel pendiente' });
+
+  const reward = generarRewardNivel();
+  const statOptions = generarStatsOpcionesNivel();
+
+  res.json({ reward, statOptions });
+});
+
+router.post('/:id/level-up-confirm', verificarToken, async (req, res) => {
+  const { reward, statChoice } = req.body;
+  const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ? AND pending_level = 1', [req.params.id, req.userId]);
+  if (!shaolin) return res.status(400).json({ error: 'No hay nivel pendiente' });
+
+  const xpNeeded = 6 + shaolin.level * 2;
+
+  if (reward && reward.tipo === 'arma' && reward.item) {
+    await db.run('INSERT INTO armas (shaolin_id, nombre, tipo, dano_min, dano_max, equipada) VALUES (?, ?, ?, ?, ?, 0)',
+      [shaolin.id, reward.item.nombre, reward.item.tipo, reward.item.dano_min, reward.item.dano_max]);
+  } else if (reward && reward.tipo === 'habilidad' && reward.item) {
+    const existente = await db.get('SELECT id, nivel FROM habilidades WHERE shaolin_id = ? AND nombre = ?', [shaolin.id, reward.item.nombre]);
+    if (existente) {
+      const nuevoNivel = Math.min(3, (existente.nivel || 1) + 1);
+      await db.run('UPDATE habilidades SET nivel = ? WHERE id = ?', [nuevoNivel, existente.id]);
+    } else {
+      await db.run('INSERT INTO habilidades (shaolin_id, nombre, descripcion, efecto, nivel) VALUES (?, ?, ?, ?, 1)',
+        [shaolin.id, reward.item.nombre, reward.item.descripcion, reward.item.efecto]);
+    }
+  } else if (reward && reward.tipo === 'stat') {
+    if (reward.stat === 'vitalidad') {
+      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = max_hp + ? * 5, max_hp = max_hp + ? * 5 WHERE id = ?',
+        [reward.valor, reward.valor, reward.valor, shaolin.id]);
+    } else if (reward.stat === 'fuerza') {
+      await db.run(`UPDATE shaolins SET ${reward.stat} = ${reward.stat} + ? WHERE id = ?`, [reward.valor, shaolin.id]);
+    } else if (reward.stat === 'agilidad') {
+      await db.run(`UPDATE shaolins SET ${reward.stat} = ${reward.stat} + ? WHERE id = ?`, [reward.valor, shaolin.id]);
+    } else if (reward.stat === 'velocidad') {
+      await db.run(`UPDATE shaolins SET ${reward.stat} = ${reward.stat} + ? WHERE id = ?`, [reward.valor, shaolin.id]);
+    }
+  }
+
+  if (statChoice) {
+    if (statChoice.stat === 'vitalidad') {
+      const hpGain = statChoice.valor * 5;
+      await db.run('UPDATE shaolins SET vitalidad = vitalidad + ?, hp = hp + ?, max_hp = max_hp + ? WHERE id = ?',
+        [statChoice.valor, hpGain, hpGain, shaolin.id]);
+    } else {
+      await db.run(`UPDATE shaolins SET ${statChoice.stat} = ${statChoice.stat} + ? WHERE id = ?`, [statChoice.valor, shaolin.id]);
+    }
+  }
+
+  const sobrante = shaolin.xp - xpNeeded;
+  await db.run(
+    'UPDATE shaolins SET level = level + 1, xp = ?, hp = max_hp, pending_level = 0 WHERE id = ?',
+    [Math.max(0, sobrante), shaolin.id]
+  );
+
+  const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [shaolin.id]);
+  shaolinFinal.armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [shaolin.id]);
+  shaolinFinal.habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
+
+  const qiData = aplicarSkillsYQi(shaolinFinal);
+  Object.assign(shaolinFinal, qiData);
+
+  res.json(shaolinFinal);
+});
+
+module.exports = router;

@@ -35,3 +35,24 @@ const API = {
     return this.request('POST', path, body);
   },
 };
+
+function getSkinUrl(genero, skin) {
+  const s = skin && skin !== 'default' && skin !== 'null' && skin !== 'undefined' ? skin : 'default';
+  return `/images/skins/${s}-${genero}.png`;
+}
+
+function getColor(genero) {
+  return genero === 'femenino' ? '#e879f9' : '#60a5fa';
+}
+
+function crearAvatarImg(genero, skin) {
+  const img = document.createElement('img');
+  img.src = getSkinUrl(genero, skin);
+  img.alt = genero === 'femenino' ? 'Femenino' : 'Masculino';
+  img.onerror = function() {
+    this.onerror = null;
+    this.style.display = 'none';
+    this.parentElement.innerHTML = genero === 'femenino' ? '👩' : '👨';
+  };
+  return img;
+}

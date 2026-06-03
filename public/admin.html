@@ -25,6 +25,8 @@
     .admin-login { max-width: 400px; margin: 100px auto; }
     .btn-tab { padding: 8px 16px; margin-right: 4px; cursor: pointer; border: 1px solid #4a3060; background: rgba(30,15,50,0.5); color: #8b6fa0; border-radius: 6px 6px 0 0; }
     .btn-tab.active { background: rgba(139,92,246,0.2); color: #a78bfa; border-color: #8b5cf6; }
+    .btn-dev { background: #dc2626; color: white; padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-dev:hover { background: #ef4444; }
   </style>
 </head>
 <body>
@@ -51,17 +53,19 @@
     <!-- Panel -->
     <div id="admin-panel" class="hidden">
       <div class="card">
-        <div style="display:flex;gap:4px;margin-bottom:16px">
+        <div style="display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap">
           <button class="btn-tab active" data-tab="resumen" onclick="switchTab('resumen')">📊 Resumen</button>
           <button class="btn-tab" data-tab="usuarios" onclick="switchTab('usuarios')">👥 Usuarios</button>
-          <button class="btn-tab" data-tab="brutos" onclick="switchTab('guerreros')">🥋 Guerreros</button>
+          <button class="btn-tab" data-tab="guerreros" onclick="switchTab('guerreros')">🥋 Guerreros</button>
           <button class="btn-tab" data-tab="combates" onclick="switchTab('combates')">⚔️ Combates</button>
+          <button class="btn-tab" data-tab="dev" onclick="switchTab('dev')">🔧 Dev</button>
         </div>
 
         <div id="tab-resumen" class="tab-content active"></div>
         <div id="tab-usuarios" class="tab-content"></div>
         <div id="tab-guerreros" class="tab-content"></div>
         <div id="tab-combates" class="tab-content"></div>
+        <div id="tab-dev" class="tab-content"></div>
       </div>
     </div>
   </div>
@@ -103,20 +107,21 @@
       document.querySelector(`.btn-tab[data-tab="${tab}"]`).classList.add('active');
 
       if (tab === 'usuarios') loadUsuarios();
-      if (tab === 'guerreros') loadBrutos();
+      if (tab === 'guerreros') loadShaolins();
       if (tab === 'combates') loadCombates();
+      if (tab === 'dev') loadDev();
     }
 
     async function loadResumen() {
       try {
         const users = await apiAdmin('GET', '/users');
-        const brutos = await apiAdmin('GET', '/brutos');
+        const shaolins = await apiAdmin('GET', '/shaolins');
         const combates = await apiAdmin('GET', '/combates');
 
         document.getElementById('tab-resumen').innerHTML = `
           <div class="stats-grid">
             <div class="stat-card"><div class="numero">${users.length}</div><div class="label">👥 Usuarios</div></div>
-            <div class="stat-card"><div class="numero">${brutos.length}</div><div class="label">🥋 Guerreros</div></div>
+            <div class="stat-card"><div class="numero">${shaolins.length}</div><div class="label">🥋 Guerreros</div></div>
             <div class="stat-card"><div class="numero">${combates.length}</div><div class="label">⚔️ Combates</div></div>
           </div>
           <h4>Últimos usuarios</h4>
@@ -125,7 +130,7 @@
             ${users.slice(-5).reverse().map(u => `
               <tr>
                 <td>${u.id}</td><td>${u.username}</td><td>${u.email}</td>
-                <td>${u.brutos.length}</td><td>${u.combates}</td>
+                <td>${u.shaolins.length}</td><td>${u.combates}</td>
                 <td>${new Date(u.created_at).toLocaleDateString()}</td>
               </tr>
             `).join('')}
@@ -144,7 +149,7 @@
             ${users.map(u => `
               <tr>
                 <td>${u.id}</td><td>${u.username}</td><td>${u.email}</td>
-                <td>${u.brutos.map(b => b.name).join(', ') || '-'}</td>
+                <td>${u.shaolins.map(b => b.name).join(', ') || '-'}</td>
                 <td>${u.combates}</td>
                 <td>${new Date(u.created_at).toLocaleDateString()}</td>
                 <td><button class="accion-btn danger" onclick="borrarUsuario(${u.id})">🗑️</button></td>
@@ -155,19 +160,19 @@
       } catch(e) { document.getElementById('tab-usuarios').innerHTML = `<span class="badge badge-err">Error: ${e.message}</span>`; }
     }
 
-    async function loadBrutos() {
+    async function loadShaolins() {
       try {
-        const brutos = await apiAdmin('GET', '/brutos');
+        const shaolins = await apiAdmin('GET', '/shaolins');
         document.getElementById('tab-guerreros').innerHTML = `
-          <h4>🥋 Todos los guerreros (${brutos.length})</h4>
+          <h4>🥋 Todos los guerreros (${shaolins.length})</h4>
           <table>
             <tr><th>ID</th><th>Nombre</th><th>Dueño</th><th>Nivel</th><th>Género</th><th>HP</th><th>Combates</th><th>Acción</th></tr>
-            ${brutos.map(b => `
+            ${shaolins.map(b => `
               <tr>
                 <td>${b.id}</td><td>${b.name}</td><td>${b.username}</td>
                 <td>${b.level}</td><td>${b.genero === 'femenino' ? '♀' : '♂'}</td>
                 <td>${b.hp}/${b.max_hp}</td><td>${b.combates}</td>
-                <td><button class="accion-btn danger" onclick="borrarBruto(${b.id})">🗑️</button></td>
+                <td><button class="accion-btn danger" onclick="borrarShaolin(${b.id})">🗑️</button></td>
               </tr>
             `).join('')}
           </table>
@@ -181,17 +186,56 @@
         document.getElementById('tab-combates').innerHTML = `
           <h4>⚔️ Últimos 50 combates</h4>
           <table>
-            <tr><th>ID</th><th>Bruto 1</th><th>Bruto 2</th><th>Ganador</th><th>Fecha</th></tr>
+            <tr><th>ID</th><th>Shaolin 1</th><th>Shaolin 2</th><th>Ganador</th><th>Fecha</th></tr>
             ${combates.map(c => `
               <tr>
                 <td>${c.id}</td><td>${c.b1_name}</td><td>${c.b2_name}</td>
-                <td><span class="badge ${c.winner_id === c.bruto1_id ? 'badge-ok' : 'badge-err'}">${c.winner_id === c.bruto1_id ? c.b1_name : c.b2_name}</span></td>
+                <td><span class="badge ${c.winner_id === c.shaolin1_id ? 'badge-ok' : 'badge-err'}">${c.winner_id === c.shaolin1_id ? c.b1_name : c.b2_name}</span></td>
                 <td>${new Date(c.created_at).toLocaleString()}</td>
               </tr>
             `).join('')}
           </table>
         `;
       } catch(e) { document.getElementById('tab-combates').innerHTML = `<span class="badge badge-err">Error: ${e.message}</span>`; }
+    }
+
+    async function loadDev() {
+      document.getElementById('tab-dev').innerHTML = `
+        <h4 style="color:#ef4444">🔧 Modo Desarrollo</h4>
+        <p style="color:#8b6fa0;margin-bottom:16px">Herramientas para desarrollo y debugging.</p>
+        <div class="card" style="border-color:#ef4444;background:rgba(220,38,38,0.05)">
+          <h4 style="color:#ef4444;margin-bottom:8px">⚠️ Resetear Stats de Todos los Jugadores</h4>
+          <p style="color:#8b6fa0;font-size:13px;margin-bottom:12px">
+            Vuelve todos los personajes de jugadores a stats base por género (nivel 1, xp 0).<br>
+            <strong>Las armas y habilidades existentes NO se borran.</strong>
+          </p>
+          <input type="text" id="reset-confirm-input" placeholder='Escribe "RESET" para confirmar' style="width:100%;padding:8px;margin-bottom:8px;background:#1a0a2e;border:1px solid #4a3060;border-radius:4px;color:#e0d0f0">
+          <button id="reset-btn" class="btn-dev" onclick="resetearStats()" disabled>🔄 Resetear Stats</button>
+          <div id="reset-result" style="margin-top:12px;font-size:14px"></div>
+        </div>
+      `;
+
+      document.getElementById('reset-confirm-input').addEventListener('input', function() {
+        document.getElementById('reset-btn').disabled = this.value !== 'RESET';
+      });
+    }
+
+    async function resetearStats() {
+      const btn = document.getElementById('reset-btn');
+      const result = document.getElementById('reset-result');
+      btn.disabled = true;
+      btn.textContent = 'Resetando...';
+      result.innerHTML = '';
+
+      try {
+        const data = await apiAdmin('POST', '/reset-stats');
+        result.innerHTML = `<span style="color:#34d399">✅ ${data.reseteados} personajes reseteados a stats base.</span>`;
+        btn.textContent = '🔄 Resetear Stats';
+        loadResumen();
+      } catch (e) {
+        result.innerHTML = `<span style="color:#ef4444">Error: ${e.message}</span>`;
+        btn.textContent = '🔄 Resetear Stats';
+      }
     }
 
     async function borrarUsuario(id) {
@@ -203,11 +247,11 @@
       } catch(e) { alert('Error: ' + e.message); }
     }
 
-    async function borrarBruto(id) {
+    async function borrarShaolin(id) {
       if (!confirm('¿Borrar guerrero #' + id + '?')) return;
       try {
-        await apiAdmin('DELETE', '/brutos/' + id);
-        loadBrutos();
+        await apiAdmin('DELETE', '/shaolins/' + id);
+        loadShaolins();
         loadResumen();
       } catch(e) { alert('Error: ' + e.message); }
     }

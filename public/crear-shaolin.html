@@ -23,7 +23,7 @@
       <div id="paso-1" class="creacion-paso active">
         <div class="form-group">
           <label>Nombre del Guerrero</label>
-          <input type="text" id="bruto-name" placeholder="Ej: Shaolin Master" maxlength="20">
+          <input type="text" id="shaolin-name" placeholder="Ej: Shaolin Master" maxlength="20">
         </div>
 
         <label style="display:block;margin-bottom:12px;color:#a78bfa">Género</label>
@@ -55,27 +55,13 @@
       <!-- Paso 3: Elección -->
       <div id="paso-3" class="creacion-paso">
         <h3 style="text-align:center;color:#a78bfa">Elige tu regalo inicial</h3>
-        <p style="text-align:center;color:#8b6fa0;margin-bottom:16px">Cada opción te dará un objeto aleatorio de esa categoría</p>
+        <p style="text-align:center;color:#8b6fa0;margin-bottom:16px">Cada opción te da un objeto diferente. ¡Elige sabiamente!</p>
 
-        <div class="eleccion-items">
-          <div class="eleccion-item" onclick="elegirOpcion(0)">
-            <div class="icono">🗡️</div>
-            <div class="titulo">Arma</div>
-            <div class="desc">Recibe un arma aleatoria para tu guerrero</div>
-          </div>
-          <div class="eleccion-item" onclick="elegirOpcion(1)">
-            <div class="icono">✨</div>
-            <div class="titulo">Habilidad</div>
-            <div class="desc">Desbloquea una habilidad especial</div>
-          </div>
-          <div class="eleccion-item" onclick="elegirOpcion(2)">
-            <div class="icono">🐾</div>
-            <div class="titulo">Mascota</div>
-            <div class="desc">Consigue un compañero de batalla</div>
-          </div>
+        <div id="opciones-container" class="eleccion-items">
+          <div style="text-align:center;color:#8b6fa0;grid-column:1/-1;padding:20px">Generando opciones...</div>
         </div>
 
-        <button id="crear-btn" class="btn btn-primario mt-20" style="width:100%" onclick="crearBruto()" disabled>Crear Guerrero</button>
+        <button id="crear-btn" class="btn btn-primario mt-20" style="width:100%" onclick="crearShaolin()" disabled>Crear Guerrero</button>
       </div>
 
       <!-- Paso 4: Resultado -->
@@ -85,8 +71,8 @@
     </div>
   </div>
 
-  <script src="/js/api.js?v=2"></script>
-  <script src="/js/auth.js?v=2"></script>
-  <script src="/js/crear-bruto.js?v=2"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/auth.js?v=4"></script>
+  <script src="/js/crear-shaolin.js?v=4"></script>
 </body>
 </html>

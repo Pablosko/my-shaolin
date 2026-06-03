@@ -2,26 +2,24 @@ const express = require('express');
 const db = require('../db/database');
 const { verificarToken } = require('../middleware/auth');
 const { simularCombate } = require('../game/engine');
-const { generarBots } = require('../game/data');
+const { generarBots, aplicarSkillsYQi } = require('../game/data');
 
 const router = express.Router();
 
-router.get('/oponentes', verificarToken, (req, res) => {
-  const brutos = db.query('SELECT * FROM brutos WHERE user_id != ?', [req.userId]);
+router.get('/oponentes', verificarToken, async (req, res) => {
+  const shaolins = await db.query('SELECT * FROM shaolins WHERE user_id != ?', [req.userId]);
 
-  const result = brutos.map(b => {
-    const armas = db.query('SELECT * FROM armas WHERE bruto_id = ?', [b.id]);
-    const habilidades = db.query('SELECT * FROM habilidades WHERE bruto_id = ?', [b.id]);
-    const mascotas = db.query('SELECT * FROM mascotas WHERE bruto_id = ?', [b.id]);
-    const user = db.get('SELECT username FROM users WHERE id = ?', [b.user_id]);
+  const result = await Promise.all(shaolins.map(async b => {
+    const armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [b.id]);
+    const habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [b.id]);
+    const user = await db.get('SELECT username FROM users WHERE id = ?', [b.user_id]);
     return {
       ...b,
       username: user ? user.username : 'Desconocido',
       armas,
       habilidades,
-      mascotas,
     };
-  });
+  }));
 
   res.json(result);
 });
@@ -31,32 +29,36 @@ router.get('/bots', verificarToken, (req, res) => {
   res.json(bots);
 });
 
-router.get('/historial/:bruto_id', verificarToken, (req, res) => {
-  const { bruto_id } = req.params;
-  const combates = db.query(`
+router.get('/historial/:shaolin_id', verificarToken, async (req, res) => {
+  const { shaolin_id } = req.params;
+  const combates = await db.query(`
     SELECT c.*, b1.name as b1_name, b2.name as b2_name
     FROM combates c
-    JOIN brutos b1 ON c.bruto1_id = b1.id
-    JOIN brutos b2 ON c.bruto2_id = b2.id
-    WHERE c.bruto1_id = ? OR c.bruto2_id = ?
+    JOIN shaolins b1 ON c.shaolin1_id = b1.id
+    JOIN shaolins b2 ON c.shaolin2_id = b2.id
+    WHERE c.shaolin1_id = ? OR c.shaolin2_id = ?
     ORDER BY c.created_at DESC
     LIMIT 20
-  `, [parseInt(bruto_id), parseInt(bruto_id)]);
+  `, [parseInt(shaolin_id), parseInt(shaolin_id)]);
 
   res.json(combates);
 });
 
-router.post('/combatir/:oponente_id', verificarToken, (req, res) => {
-  const { bruto_id, oponente_data } = req.body;
+router.post('/combatir/:oponente_id', verificarToken, async (req, res) => {
+  const { shaolin_id, oponente_data } = req.body;
   const oponente_id = parseInt(req.params.oponente_id);
 
-  if (!bruto_id) {
-    return res.status(400).json({ error: 'Selecciona un bruto para combatir' });
+  if (!shaolin_id) {
+    return res.status(400).json({ error: 'Selecciona un shaolin para combatir' });
   }
 
-  const miBruto = db.get('SELECT * FROM brutos WHERE id = ? AND user_id = ?', [bruto_id, req.userId]);
-  if (!miBruto) {
-    return res.status(404).json({ error: 'Bruto no encontrado' });
+  const miShaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ?', [shaolin_id, req.userId]);
+  if (!miShaolin) {
+    return res.status(404).json({ error: 'Shaolin no encontrado' });
+  }
+
+  if (miShaolin.pending_level) {
+    return res.status(400).json({ error: 'Debes subir de nivel antes de combatir' });
   }
 
   const esBot = oponente_id < 0;
@@ -65,12 +67,12 @@ router.post('/combatir/:oponente_id', verificarToken, (req, res) => {
   if (esBot && oponente_data) {
     oponente = oponente_data;
   } else if (!esBot) {
-    oponente = db.get('SELECT * FROM brutos WHERE id = ?', [oponente_id]);
+    oponente = await db.get('SELECT * FROM shaolins WHERE id = ?', [oponente_id]);
     if (!oponente) {
       return res.status(404).json({ error: 'Oponente no encontrado' });
     }
-    if (miBruto.user_id === oponente.user_id) {
-      return res.status(400).json({ error: 'No puedes combatir contra tu propio bruto' });
+    if (miShaolin.user_id === oponente.user_id) {
+      return res.status(400).json({ error: 'No puedes combatir contra tu propio shaolin' });
     }
   } else {
     return res.status(400).json({ error: 'Datos de bot no proporcionados' });
@@ -78,65 +80,106 @@ router.post('/combatir/:oponente_id', verificarToken, (req, res) => {
 
   const hoy = new Date().toISOString().split('T')[0];
 
-  if (miBruto.ultimo_combate === hoy && miBruto.combates_hoy >= 3) {
-    return res.status(400).json({ error: 'Límite de 3 combates diarios alcanzado' });
+  if (miShaolin.ultimo_combate === hoy && miShaolin.combates_hoy >= 500) {
+    return res.status(400).json({ error: 'Límite de 500 combates diarios alcanzado' });
   }
 
+  const b1Habilidades = await db.query('SELECT * FROM habilidades WHERE shaolin_id = ?', [miShaolin.id]);
+  const b1Armas = await db.query('SELECT * FROM armas WHERE shaolin_id = ?', [miShaolin.id]);
+  const b1Qi = aplicarSkillsYQi({ ...miShaolin, habilidades: b1Habilidades });
+
+  const b2Habilidades = oponente.habilidades || [];
+  const b2Armas = oponente.armas || [];
+  const b2Qi = aplicarSkillsYQi({ ...oponente, habilidades: b2Habilidades });
+
   const b1Completo = {
-    ...miBruto,
-    armas: db.query('SELECT * FROM armas WHERE bruto_id = ?', [miBruto.id]),
-    habilidades: db.query('SELECT * FROM habilidades WHERE bruto_id = ?', [miBruto.id]),
-    mascota: db.query('SELECT * FROM mascotas WHERE bruto_id = ?', [miBruto.id])[0] || null,
+    ...miShaolin,
+    armas: b1Armas,
+    habilidades: b1Habilidades,
+    qi: b1Qi.qi,
+    fuerza: b1Qi.baseFuerza,
+    agilidad: b1Qi.baseAgilidad,
+    velocidad: b1Qi.baseVelocidad,
+    max_hp: b1Qi.baseMaxHp,
   };
 
   const b2Completo = {
     ...oponente,
-    armas: oponente.armas || [],
-    habilidades: oponente.habilidades || [],
-    mascota: (oponente.mascotas && oponente.mascotas[0]) || oponente.mascota || null,
+    armas: b2Armas,
+    habilidades: b2Habilidades,
+    qi: b2Qi.qi,
+    fuerza: b2Qi.baseFuerza,
+    agilidad: b2Qi.baseAgilidad,
+    velocidad: b2Qi.baseVelocidad,
+    max_hp: b2Qi.baseMaxHp,
   };
 
-  const resultado = simularCombate(b1Completo, b2Completo);
+  async function onPerderArma(shaolinId, armaId) {
+    if (armaId && shaolinId > 0) {
+      await db.run('UPDATE armas SET equipada = 0 WHERE id = ? AND shaolin_id = ?', [armaId, shaolinId]);
+    }
+  }
+
+  const skills1 = {
+    dañoArma: b1Qi.dañoArma,
+    dañoPuño: b1Qi.dañoPuño,
+    extraDefensa: b1Qi.extraDefensa,
+    extraResistencia: b1Qi.extraResistencia,
+    extraCritico: b1Qi.extraCritico,
+    extraEsquiva: b1Qi.extraEsquiva,
+    extraCombo: b1Qi.extraCombo,
+    extraContra: b1Qi.extraContra,
+    roboVida: b1Qi.roboVida,
+  };
+
+  const skills2 = {
+    dañoArma: b2Qi.dañoArma,
+    dañoPuño: b2Qi.dañoPuño,
+    extraDefensa: b2Qi.extraDefensa,
+    extraResistencia: b2Qi.extraResistencia,
+    extraCritico: b2Qi.extraCritico,
+    extraEsquiva: b2Qi.extraEsquiva,
+    extraCombo: b2Qi.extraCombo,
+    extraContra: b2Qi.extraContra,
+    roboVida: b2Qi.roboVida,
+  };
+
+  const resultado = simularCombate(b1Completo, b2Completo, skills1, skills2, onPerderArma);
 
   if (!esBot) {
-    db.run(
-      'INSERT INTO combates (bruto1_id, bruto2_id, winner_id, log) VALUES (?, ?, ?, ?)',
-      [miBruto.id, oponente.id, resultado.winner_id, resultado.log]
+    await db.run(
+      'INSERT INTO combates (shaolin1_id, shaolin2_id, winner_id, log) VALUES (?, ?, ?, ?)',
+      [miShaolin.id, oponente.id, resultado.winner_id, resultado.log]
     );
   }
 
-  if (resultado.winner_id === miBruto.id) {
-    const newXp = miBruto.xp + 2;
-    db.run('UPDATE brutos SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
-      [newXp, hoy, miBruto.id]);
+  if (resultado.winner_id === miShaolin.id) {
+    const newXp = miShaolin.xp + 2;
+    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+      [newXp, hoy, miShaolin.id]);
   } else {
-    const newXp = miBruto.xp + 1;
-    db.run('UPDATE brutos SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
-      [newXp, hoy, miBruto.id]);
+    const newXp = miShaolin.xp + 1;
+    await db.run('UPDATE shaolins SET xp = ?, combates_hoy = combates_hoy + 1, ultimo_combate = ? WHERE id = ?',
+      [newXp, hoy, miShaolin.id]);
   }
 
-  let miBrutoActualizado = db.get('SELECT * FROM brutos WHERE id = ?', [miBruto.id]);
-  const xpParaSubir = miBrutoActualizado.level * 10 + 10;
+  let miShaolinActualizado = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
+  const xpParaSubir = 6 + miShaolinActualizado.level * 2;
 
-  let subioNivel = false;
-  if (miBrutoActualizado.xp >= xpParaSubir) {
-    const sobrante = miBrutoActualizado.xp - xpParaSubir;
-    const boostHp = Math.floor(Math.random() * 5) + 3;
-    db.run(
-      'UPDATE brutos SET level = level + 1, xp = ?, max_hp = max_hp + ?, hp = max_hp, fuerza = fuerza + 1, agilidad = agilidad + 1, velocidad = velocidad + 1 WHERE id = ?',
-      [sobrante, boostHp, miBruto.id]
-    );
-    subioNivel = true;
+  let tieneNivelPendiente = false;
+  if (miShaolinActualizado.xp >= xpParaSubir) {
+    await db.run('UPDATE shaolins SET pending_level = 1 WHERE id = ?', [miShaolin.id]);
+    tieneNivelPendiente = true;
   }
 
-  const brutoFinal = db.get('SELECT * FROM brutos WHERE id = ?', [miBruto.id]);
+  const shaolinFinal = await db.get('SELECT * FROM shaolins WHERE id = ?', [miShaolin.id]);
 
   res.json({
-    resultado: resultado.winner_id === miBruto.id ? 'victoria' : 'derrota',
+    resultado: resultado.winner_id === miShaolin.id ? 'victoria' : 'derrota',
     winner_id: resultado.winner_id,
     log: JSON.parse(resultado.log),
-    bruto_actualizado: brutoFinal,
-    subio_nivel: subioNivel,
+    shaolin_actualizado: shaolinFinal,
+    tiene_nivel_pendiente: tieneNivelPendiente,
   });
 });
 

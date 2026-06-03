@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS brutos (
+CREATE TABLE IF NOT EXISTS shaolins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   name TEXT NOT NULL,
@@ -18,49 +18,43 @@ CREATE TABLE IF NOT EXISTS brutos (
   fuerza INTEGER DEFAULT 5,
   agilidad INTEGER DEFAULT 5,
   velocidad INTEGER DEFAULT 5,
+  vitalidad INTEGER DEFAULT 0,
   combates_hoy INTEGER DEFAULT 0,
   ultimo_combate DATE,
+  pending_level INTEGER DEFAULT 0,
+  skin TEXT DEFAULT 'default',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS armas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  bruto_id INTEGER NOT NULL,
+  shaolin_id INTEGER NOT NULL,
   nombre TEXT NOT NULL,
   tipo TEXT NOT NULL,
   dano_min INTEGER NOT NULL,
   dano_max INTEGER NOT NULL,
   equipada INTEGER DEFAULT 0,
-  FOREIGN KEY (bruto_id) REFERENCES brutos(id) ON DELETE CASCADE
+  FOREIGN KEY (shaolin_id) REFERENCES shaolins(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS habilidades (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  bruto_id INTEGER NOT NULL,
+  shaolin_id INTEGER NOT NULL,
   nombre TEXT NOT NULL,
   descripcion TEXT,
   efecto TEXT NOT NULL,
-  FOREIGN KEY (bruto_id) REFERENCES brutos(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS mascotas (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  bruto_id INTEGER NOT NULL,
-  nombre TEXT NOT NULL,
-  tipo TEXT NOT NULL,
-  hp INTEGER NOT NULL,
-  ataque INTEGER NOT NULL,
-  FOREIGN KEY (bruto_id) REFERENCES brutos(id) ON DELETE CASCADE
+  nivel INTEGER DEFAULT 1,
+  FOREIGN KEY (shaolin_id) REFERENCES shaolins(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS combates (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  bruto1_id INTEGER NOT NULL,
-  bruto2_id INTEGER NOT NULL,
+  shaolin1_id INTEGER NOT NULL,
+  shaolin2_id INTEGER NOT NULL,
   winner_id INTEGER,
   log TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (bruto1_id) REFERENCES brutos(id),
-  FOREIGN KEY (bruto2_id) REFERENCES brutos(id)
+  FOREIGN KEY (shaolin1_id) REFERENCES shaolins(id),
+  FOREIGN KEY (shaolin2_id) REFERENCES shaolins(id)
 );

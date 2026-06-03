@@ -1,3 +1,4 @@
+require('express-async-errors');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -9,7 +10,7 @@ async function start() {
   console.log('Database initialized');
 
   const authRoutes = require('./routes/auth');
-  const brutoRoutes = require('./routes/bruto');
+  const shaolinRoutes = require('./routes/shaolin');
   const combateRoutes = require('./routes/combate');
   const adminRoutes = require('./routes/admin');
 
@@ -21,9 +22,14 @@ async function start() {
   app.use(express.static(path.join(__dirname, 'public')));
 
   app.use('/api/auth', authRoutes);
-  app.use('/api/brutos', brutoRoutes);
+  app.use('/api/shaolins', shaolinRoutes);
   app.use('/api/arena', combateRoutes);
   app.use('/api/admin', adminRoutes);
+
+  app.use('/api', (err, req, res, next) => {
+    console.error('API Error:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  });
 
   app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
@@ -34,7 +40,7 @@ async function start() {
   });
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`El Bruto server running on port ${PORT}`);
+    console.log(`My Shaolin server running on port ${PORT}`);
   });
 }
 
