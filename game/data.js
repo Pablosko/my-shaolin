@@ -94,24 +94,55 @@ function generarBot(nivel = 1) {
   const armas = [];
   const habilidades = [];
 
-  if (Math.random() < 0.4) armas.push({ ...getRandomArma(), equipada: true });
-  if (Math.random() < 0.3) habilidades.push({ ...getRandomHabilidad(), nivel: 1 });
+  // Paso 1: Creación — elegir regalo inicial como un jugador real
+  const opcionesIniciales = generarOpcionesIniciales();
+  const eleccion = opcionesIniciales[Math.floor(Math.random() * opcionesIniciales.length)];
+  if (eleccion.tipo === 'arma') {
+    const a = getRandomArma();
+    armas.push({ ...a, equipada: true, nivel: 1 });
+  } else {
+    const h = getRandomHabilidad();
+    habilidades.push({ ...h, nivel: 1 });
+  }
 
-  for (let i = 1; i < nivel; i++) {
-    const r = Math.random();
-    if (r < 0.40) {
-      const s = ['fuerza', 'agilidad', 'velocidad', 'vitalidad'][Math.floor(Math.random() * 4)];
-      if (s === 'vitalidad') stats.vitalidad = (stats.vitalidad || 0) + 2;
-      else stats[s]++;
-    } else if (r < 0.70) {
-      const a = getRandomArma();
-      if (!armas.find(x => x.nombre === a.nombre)) armas.push({ ...a, equipada: false });
-    } else {
-      const h = getRandomHabilidad();
-      const existing = habilidades.find(x => x.nombre === h.nombre);
-      if (existing) existing.nivel = Math.min(3, (existing.nivel || 1) + 1);
-      else habilidades.push({ ...h, nivel: 1 });
+  // Subidas de nivel: simular flujo real (recompensa + mejora de stats)
+  for (let i = 2; i <= nivel; i++) {
+    // Paso A: Elegir entre 2 recompensas (arma 40%, habilidad 30%, stat 30%)
+    const recompensas = generarOpcionesRecompensa();
+    const recompensa = recompensas[Math.floor(Math.random() * recompensas.length)];
+
+    if (recompensa.tipo === 'arma' && recompensa.item) {
+      if (!armas.find(a => a.nombre === recompensa.item.nombre)) {
+        armas.push({ ...recompensa.item, equipada: false, nivel: 1 });
+      }
+    } else if (recompensa.tipo === 'habilidad' && recompensa.item) {
+      const existente = habilidades.find(h => h.nombre === recompensa.item.nombre);
+      if (existente) {
+        existente.nivel = Math.min(3, (existente.nivel || 1) + 1);
+      } else {
+        habilidades.push({ ...recompensa.item, nivel: 1 });
+      }
+    } else if (recompensa.tipo === 'stat') {
+      if (recompensa.stat === 'vitalidad') {
+        stats.vitalidad = (stats.vitalidad || 0) + recompensa.valor;
+      } else {
+        stats[recompensa.stat] = (stats[recompensa.stat] || 0) + recompensa.valor;
+      }
     }
+
+    // Paso B: Elegir entre 2 mejoras de stats (bronce/silver/gold)
+    const statOptions = generarStatsOpcionesNivel();
+    const statChoice = statOptions[Math.floor(Math.random() * statOptions.length)];
+    if (statChoice.stat === 'vitalidad') {
+      stats.vitalidad = (stats.vitalidad || 0) + statChoice.valor;
+    } else {
+      stats[statChoice.stat] = (stats[statChoice.stat] || 0) + statChoice.valor;
+    }
+  }
+
+  // Asegurar que el arma equipada sea la primera si hay armas
+  if (armas.length > 0 && !armas.find(a => a.equipada)) {
+    armas[0].equipada = true;
   }
 
   const finalHp = calcularMaxHp(stats.vitalidad, nivel);
