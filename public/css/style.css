@@ -607,8 +607,9 @@ input:focus, select:focus {
 }
 #luchador-op {
   left: calc(50% + (var(--pos, 2) - 1) * 10%);
+  transform: translateY(-50%) scaleX(-1);
 }
-#luchador-op img {
+#luchador-op .pa-badge {
   transform: scaleX(-1);
 }
 

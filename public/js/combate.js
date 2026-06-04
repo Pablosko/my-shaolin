@@ -295,11 +295,11 @@ async function renderCombate(result) {
     const el = document.getElementById(spriteId);
     if (el) el.classList.add('caminando');
     setFighterFrame(spriteId, skin, 'walk_2', genero);
-    await delay(300);
+    await delay(200);
     setFighterFrame(spriteId, skin, 'walk_1', genero);
-    await delay(300);
+    await delay(200);
     setFighterFrame(spriteId, skin, 'walk_2', genero);
-    await delay(300);
+    await delay(100);
     setFighterFrame(spriteId, skin, 'idle', genero);
     if (el) el.classList.remove('caminando');
   }
@@ -356,7 +356,7 @@ async function renderCombate(result) {
       }
 
       case 'move': {
-        await delay(200);
+        await delay(100);
         const col = esMiPersonaje ? miCol : opCol;
         const spriteId = esMiPersonaje ? 'mi-sprite' : 'op-sprite';
         const info = esMiPersonaje ? miShaolinInfo : oponenteSeleccionado;
@@ -370,7 +370,7 @@ async function renderCombate(result) {
         animarPaso(spriteId, skin, gen, entry.retrocede ? -1 : 1);
         const d = p1 + p2 - 1;
         addLog(logEl, `<span class="info">${entry.actor} se mueve (${entry.distancia !== undefined ? 'Dist ' + entry.distancia : ''})</span>`);
-        await delay(1100);
+        await delay(700);
         break;
       }
 
