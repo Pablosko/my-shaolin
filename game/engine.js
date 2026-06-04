@@ -361,8 +361,8 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
       }
     }
 
-    // Strategic retreat: 15% chance to step back after attack
-    if (paLeft >= costoPaso(actor.pos) && actor.pos < 5 && Math.random() < 0.15) {
+    // Strategic retreat: always step back after attack (example mode)
+    if (paLeft >= costoPaso(actor.pos) && actor.pos < 5) {
       const steps = Math.random() < 0.4 && actor.pos <= 3 ? 2 : 1;
       const totalCost = steps === 2 ? costoPaso(actor.pos) + costoPaso(actor.pos + 1) : costoPaso(actor.pos);
       if (paLeft >= totalCost) {
