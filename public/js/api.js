@@ -66,19 +66,21 @@ function formatStatDiff(base, real) {
 }
 
 const SEG_COLORS = [
-  '#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444',
-  '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d', '#450a0a',
+  '#22c55e', '#eab308', '#f97316', '#ef4444',
+  '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d', '#450a0a', '#1a0000',
 ];
 
-function colorForValue(val) {
-  if (val <= 10) return SEG_COLORS[0];
-  if (val <= 20) return SEG_COLORS[1];
-  if (val <= 30) return SEG_COLORS[2];
-  if (val <= 40) return SEG_COLORS[3];
-  if (val <= 50) return SEG_COLORS[4];
-  if (val <= 60) return SEG_COLORS[5];
-  if (val <= 70) return SEG_COLORS[6];
-  if (val <= 80) return SEG_COLORS[7];
-  if (val <= 90) return SEG_COLORS[8];
-  return SEG_COLORS[9];
+function colorBar(value, maxSegs = 10) {
+  const fullTiers = Math.floor(value / 10);
+  const remainder = value % 10;
+  const colors = [];
+  for (let i = 0; i < maxSegs; i++) {
+    const layers = fullTiers + (i < remainder ? 1 : 0);
+    if (layers === 0) {
+      colors.push('#2a1a3ab3');
+    } else {
+      colors.push(SEG_COLORS[Math.min(layers - 1, SEG_COLORS.length - 1)]);
+    }
+  }
+  return colors;
 }

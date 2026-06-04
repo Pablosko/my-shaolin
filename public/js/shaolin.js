@@ -8,12 +8,11 @@ function renderSegBar(containerId, value) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-  const maxSegs = 10;
-  const filled = Math.min(maxSegs, Math.max(0, Math.ceil(value / 10)));
-  for (let i = 0; i < maxSegs; i++) {
+  const colors = colorBar(value, 10);
+  for (let i = 0; i < 10; i++) {
     const seg = document.createElement('div');
     seg.className = 'seg-bar-segment';
-    seg.style.background = i < filled ? colorForValue(i * 10 + 1) : '#2a1a3ab3';
+    seg.style.background = colors[i];
     container.appendChild(seg);
   }
 }

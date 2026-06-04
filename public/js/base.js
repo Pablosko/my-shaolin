@@ -146,17 +146,9 @@ async function loadBase() {
 }
 
 function renderSegBarStatic(valor) {
-  const segs = 10;
-  const filled = Math.min(segs, Math.max(0, Math.ceil(valor / 10)));
-  let html = '';
-  for (let i = 0; i < segs; i++) {
-    if (i < filled) {
-      html += `<span class="seg-bar-segment" style="background:${colorForValue(i * 10 + 1)}"></span>`;
-    } else {
-      html += `<span class="seg-bar-segment" style="background:#2a1a3ab3"></span>`;
-    }
-  }
-  return html;
+  return colorBar(valor, 10).map(c =>
+    `<span class="seg-bar-segment" style="background:${c}"></span>`
+  ).join('');
 }
 
 async function renderBaseArmas(b) {
