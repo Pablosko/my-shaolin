@@ -440,7 +440,7 @@ function aplicarSkillsYQi(b) {
     real_fuerza: Math.round(baseFuerza * factor),
     real_agilidad: Math.round(baseAgilidad * factor),
     real_velocidad: Math.round(baseVelocidad * factor),
-    real_max_hp: Math.round(baseMaxHp * factor),
+    real_max_hp: Math.round(baseMaxHp),
   };
 }
 
