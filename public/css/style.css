@@ -603,10 +603,10 @@ input:focus, select:focus {
 }
 
 #luchador-mi {
-  left: calc(2% + (5 - var(--pos, 2)) * 10%);
+  left: calc((5 - var(--pos, 2)) * 10%);
 }
 #luchador-op {
-  left: calc(52% + (var(--pos, 2) - 1) * 10%);
+  left: calc(50% + (var(--pos, 2) - 1) * 10%);
 }
 
 .weapon-hand {

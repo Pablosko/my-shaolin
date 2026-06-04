@@ -18,8 +18,13 @@ const API = {
     }
 
     const res = await fetch(this.baseUrl + path, config);
-    const data = await res.json();
-
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (_) {
+      throw new Error(`Respuesta inesperada del servidor (${res.status}): formato inválido`);
+    }
     if (!res.ok) {
       throw new Error(data.error || 'Error en la solicitud');
     }
