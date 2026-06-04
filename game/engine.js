@@ -255,7 +255,20 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
         const diff = dist - idealDist;
         const dir = diff > 0 ? -1 : 1;
 
-        // Charge: 2 steps + attack
+        // Aggressive charge: random 2-step advance + attack
+        if (Math.random() < 0.2 && paLeft >= PA_PESADA) {
+          paLeft -= PA_PESADA;
+          ataquesTurno++;
+          const { oldPos, newPos } = doMove(actor, dir * 2);
+          const newDist = distancia();
+          ev('move', { actor: actor.name, from: oldPos, to: newPos, p1: c1.pos, p2: c2.pos, distancia: newDist, cost: PA_PESADA, retrocede: actor === c2 ? diff < 0 : diff < 0 });
+          ev('range_change', { distancia: newDist, p1: c1.pos, p2: c2.pos, nombre: nombreDistancia(newDist) });
+          resolveAttack(actor, defender, skillsA, skillsD, newDist);
+          if (defender.hp_actual <= 0) break;
+          continue;
+        }
+
+        // Charge if far from ideal
         if (Math.abs(diff) >= 3 && paLeft >= PA_PESADA) {
           paLeft -= PA_PESADA;
           ataquesTurno++;
@@ -350,12 +363,15 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
 
     // Strategic retreat: 15% chance to step back after attack
     if (paLeft >= costoPaso(actor.pos) && actor.pos < 5 && Math.random() < 0.15) {
-      const stepCost = costoPaso(actor.pos);
-      paLeft -= stepCost;
-      const { oldPos, newPos } = doMove(actor, 1);
-      const newDist = distancia();
-      ev('move', { actor: actor.name, from: oldPos, to: newPos, p1: c1.pos, p2: c2.pos, distancia: newDist, cost: stepCost, retrocede: true });
-      ev('range_change', { distancia: newDist, p1: c1.pos, p2: c2.pos, nombre: nombreDistancia(newDist) });
+      const steps = Math.random() < 0.4 && actor.pos <= 3 ? 2 : 1;
+      const totalCost = steps === 2 ? costoPaso(actor.pos) + costoPaso(actor.pos + 1) : costoPaso(actor.pos);
+      if (paLeft >= totalCost) {
+        paLeft -= totalCost;
+        const { oldPos, newPos } = doMove(actor, steps);
+        const newDist = distancia();
+        ev('move', { actor: actor.name, from: oldPos, to: newPos, p1: c1.pos, p2: c2.pos, distancia: newDist, cost: totalCost, retrocede: true });
+        ev('range_change', { distancia: newDist, p1: c1.pos, p2: c2.pos, nombre: nombreDistancia(newDist) });
+      }
     }
 
     // Exposed check

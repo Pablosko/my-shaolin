@@ -581,7 +581,7 @@ input:focus, select:focus {
 .arena-floor {
   position: relative;
   flex: 1;
-  min-height: 200px;
+  min-height: 300px;
 }
 
 .fighter-sprite {
@@ -589,13 +589,13 @@ input:focus, select:focus {
   top: 50%;
   transform: translateY(-50%);
   text-align: center;
-  width: 110px;
+  width: 220px;
   transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .fighter-sprite img {
-  width: 100px;
-  height: 100px;
+  width: 200px;
+  height: 200px;
   object-fit: contain;
   display: block;
   margin: 0 auto;
@@ -606,7 +606,7 @@ input:focus, select:focus {
   left: calc((5 - var(--pos, 2)) * 10%);
 }
 #luchador-op {
-  left: calc(46% + (var(--pos, 2) - 1) * 9%);
+  left: calc(44% + (var(--pos, 2) - 1) * 10%);
   transform: translateY(-50%) scaleX(-1);
 }
 #luchador-op .pa-badge {
@@ -616,13 +616,13 @@ input:focus, select:focus {
 .weapon-hand {
   position: absolute;
   top: 50%;
-  font-size: 22px;
+  font-size: 28px;
   z-index: 3;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
   animation: fadeInWeapon 0.3s ease;
 }
-#luchador-mi .weapon-hand { right: -22px; }
-#luchador-op .weapon-hand { right: -22px; left: auto; }
+#luchador-mi .weapon-hand { right: -28px; }
+#luchador-op .weapon-hand { right: -28px; left: auto; }
 
 .pa-badge {
   font-size: 11px;
