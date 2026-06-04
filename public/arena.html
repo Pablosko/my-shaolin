@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arena - My Shaolin</title>
-  <link rel="stylesheet" href="/css/style.css?v=6">
+  <link rel="stylesheet" href="/css/style.css?v=7">
 </head>
 <body>
   <div id="app-header"></div>
@@ -35,50 +35,54 @@
     </div>
 
     <div id="pantalla-combate" class="hidden">
-      <div class="card combate-screen">
+      <div class="combate-screen">
         <h2>⚔️ <span id="combate-mode-label">COMBATE</span></h2>
 
-        <div class="combat-info-row">
-          <div class="fighter-pa" id="pa-mi"><span class="pa-label">PA:</span> <span class="pa-valor" id="pa-mi-valor">0</span></div>
-          <div class="rango-indicator" id="rango-indicator">Rango 3 · Guardia</div>
-          <div class="fighter-pa" id="pa-op"><span class="pa-label">PA:</span> <span class="pa-valor" id="pa-op-valor">0</span></div>
-        </div>
-
-        <div class="campo-batalla" id="campo-batalla">
-          <div class="arena-strip" id="arena-strip">
-            <div class="rango-marcador" id="rango-0">0</div>
-            <div class="rango-marcador" id="rango-1">1</div>
-            <div class="rango-marcador" id="rango-2">2</div>
-            <div class="rango-marcador" id="rango-3">3</div>
-            <div class="rango-marcador" id="rango-4">4</div>
+        <div class="campo-batalla">
+          <!-- Esquina superior izquierda: MI personaje -->
+          <div class="hp-corner left">
+            <div class="fighter-label">
+              <span class="fighter-icon" id="mi-icon">🗡️</span>
+              <span class="fighter-name" id="mi-nombre">-</span>
+            </div>
+            <div class="hp-row">
+              <div class="hp-bar-bg"><div class="hp-relleno hp-verde" id="mi-hp-relleno"></div></div>
+              <span class="hp-texto" id="mi-hp-texto">-/-</span>
+            </div>
+            <div class="weapon-strip" id="mi-weapons-strip"></div>
           </div>
 
-          <div class="luchador-scene" id="luchador-scene">
-            <div class="luchador-arena" id="luchador-mi" style="--pos:0">
-              <div class="luchador-header">
-                <div class="luchador-avatar" id="mi-avatar">👨</div>
-                <div class="weapon-reserve" id="mi-weapons"></div>
+          <!-- Centro: personajes + distancia -->
+          <div class="arena-center">
+            <div class="distance-indicator">
+              <div class="dist-nombre" id="rango-indicator">Distancia 3 · Corta</div>
+              <div class="dist-pips" id="distance-pips">•••••••••</div>
+            </div>
+            <div class="fighter-zone">
+              <div class="fighter-sprite" id="luchador-mi" style="--pos:2">
+                <img id="mi-sprite" src="" alt="P1" />
+                <div class="weapon-hand hidden" id="mi-equipada"></div>
+                <div class="pa-badge">PA: <span id="pa-mi-valor">0</span></div>
               </div>
-              <div class="luchador-nombre" id="mi-nombre">-</div>
-              <div class="weapon-equipada hidden" id="mi-equipada"></div>
-              <div class="hp-contenedor">
-                <div class="hp-barra-ext"><div class="hp-relleno hp-verde" id="mi-hp-relleno"></div></div>
-                <span class="hp-texto" id="mi-hp-texto">-</span>
+              <div class="fighter-sprite" id="luchador-op" style="--pos:2">
+                <img id="op-sprite" src="" alt="P2" />
+                <div class="weapon-hand hidden" id="op-equipada"></div>
+                <div class="pa-badge">PA: <span id="pa-op-valor">0</span></div>
               </div>
             </div>
+          </div>
 
-            <div class="luchador-arena" id="luchador-op" style="--pos:0">
-              <div class="luchador-header">
-                <div class="luchador-avatar" id="op-avatar">🤖</div>
-                <div class="weapon-reserve" id="op-weapons"></div>
-              </div>
-              <div class="luchador-nombre" id="op-nombre">-</div>
-              <div class="weapon-equipada hidden" id="op-equipada"></div>
-              <div class="hp-contenedor">
-                <div class="hp-barra-ext"><div class="hp-relleno hp-rojo" id="op-hp-relleno"></div></div>
-                <span class="hp-texto" id="op-hp-texto">-</span>
-              </div>
+          <!-- Esquina superior derecha: OPONENTE -->
+          <div class="hp-corner right">
+            <div class="fighter-label">
+              <span class="fighter-name" id="op-nombre">-</span>
+              <span class="fighter-icon" id="op-icon">🤖</span>
             </div>
+            <div class="hp-row">
+              <div class="hp-bar-bg"><div class="hp-relleno hp-rojo" id="op-hp-relleno"></div></div>
+              <span class="hp-texto" id="op-hp-texto">-/-</span>
+            </div>
+            <div class="weapon-strip" id="op-weapons-strip"></div>
           </div>
         </div>
 
@@ -92,6 +96,6 @@
   <script src="/js/api.js?v=7"></script>
   <script src="/js/auth.js?v=6"></script>
   <script src="/js/header.js?v=6"></script>
-  <script src="/js/combate.js?v=6"></script>
+  <script src="/js/combate.js?v=7"></script>
 </body>
 </html>

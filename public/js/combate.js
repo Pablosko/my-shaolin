@@ -5,11 +5,28 @@ let esModoEntreno = false;
 let miShaolinInfo = null;
 let miHpMax = 0;
 let opHpMax = 0;
-let rangoActual = 3;
+let p1 = 2;
+let p2 = 2;
 let oponenteNameForPost = null;
 let oponenteIdForPost = null;
 
-const RANGO_NOMBRE = ['Contacto', 'Corta', 'Media', 'Guardia', 'Larga'];
+const DIST_NOMBRES = ['', 'Contacto', 'Corta', 'Corta', 'Media', 'Media', 'Guardia', 'Guardia', 'Larga', 'Larga'];
+const FAMILIA_ICONO = { puño: '🥊', dao: '🗡️', jian: '⚔️', gun: '🔱', shuanggou: '⛓️', fei_biao: '🏹' };
+
+function weaponIcon(familia) {
+  return FAMILIA_ICONO[familia] || '🗡️';
+}
+
+function setFighterFrame(spriteId, skin, frame, genero) {
+  const el = document.getElementById(spriteId);
+  if (!el) return;
+  const url = `/images/skins/${skin}/${frame}.png`;
+  el.src = url;
+  el.onerror = function() {
+    this.onerror = null;
+    this.src = getSkinUrl(genero, skin);
+  };
+}
 
 async function loadArena() {
   const params = new URLSearchParams(window.location.search);
@@ -31,15 +48,8 @@ async function loadArena() {
     }
 
     document.getElementById('mi-nombre').textContent = miShaolinInfo.name;
-    const miAvatarEl = document.getElementById('mi-avatar');
-    miAvatarEl.innerHTML = '';
-    miAvatarEl.appendChild(crearAvatarImg(miShaolinInfo.genero, miShaolinInfo.skin));
-
-    const weaponsEl = document.getElementById('mi-weapons');
-    if (miShaolinInfo.armas && miShaolinInfo.armas.length > 0) {
-      weaponsEl.innerHTML = miShaolinInfo.armas.map(a => `<span class="reserva-item">🗡️ ${a.nombre}</span>`).join('');
-    }
-
+    setFighterFrame('mi-sprite', miShaolinInfo.skin, 'idle', miShaolinInfo.genero);
+    renderWeaponStrip('mi-weapons-strip', miShaolinInfo.armas || [], null);
     miHpMax = miShaolinInfo.real_max_hp || miShaolinInfo.max_hp;
     actualizarBarraHP('mi', miShaolinInfo.hp, miHpMax);
 
@@ -112,6 +122,18 @@ function actualizarBarraHP(lado, actual, maximo) {
   }
 }
 
+function renderWeaponStrip(containerId, armas, equipadaNombre) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = armas
+    .filter(a => a.nombre !== equipadaNombre)
+    .map(a => `<span class="ws-icon" data-nombre="${a.nombre}">${weaponIcon(a.familia)}</span>`)
+    .join('');
+  if (el.innerHTML === '' && (!armas || armas.length === 0)) {
+    el.innerHTML = '';
+  }
+}
+
 async function cargarOponentes() {
   try {
     let oponentes;
@@ -174,7 +196,7 @@ function crearCardOponente(op) {
     <div style="font-size:13px;margin-top:8px">
       Nv.${op.level} · ❤️${op.real_max_hp || op.max_hp || op.hp} · 💪${op.real_fuerza || op.fuerza} · 🏃${op.real_agilidad || op.agilidad} · ⚡${op.real_velocidad || op.velocidad}
     </div>
-    ${op.armas && op.armas.length > 0 ? '<div style="font-size:11px;color:#8b6fa0">🗡️ ' + op.armas.map(a => a.nombre).join(', ') + '</div>' : ''}
+    ${op.armas && op.armas.length > 0 ? '<div style="font-size:11px;color:#8b6fa0">' + op.armas.map(a => weaponIcon(a.familia)).join(' ') + '</div>' : ''}
     <button class="btn btn-combatir mt-12" style="width:100%">⚔️ Combatir</button>
   `;
   card.querySelector('button').addEventListener('click', () => iniciarCombate(op, esBot));
@@ -194,14 +216,8 @@ async function iniciarCombate(oponente, esBot = false) {
   label.textContent = esModoEntreno ? '🥋 ENTRENAMIENTO' : '⚔️ COMBATE';
 
   document.getElementById('op-nombre').textContent = oponente.name;
-  const opAvatarEl = document.getElementById('op-avatar');
-  opAvatarEl.innerHTML = '';
-  opAvatarEl.appendChild(crearAvatarImg(oponente.genero, oponente.skin));
-
-  const opWeaponsEl = document.getElementById('op-weapons');
-  if (oponente.armas && oponente.armas.length > 0) {
-    opWeaponsEl.innerHTML = oponente.armas.map(a => `<span class="reserva-item">🗡️ ${a.nombre}</span>`).join('');
-  }
+  setFighterFrame('op-sprite', oponente.skin, 'idle', oponente.genero);
+  renderWeaponStrip('op-weapons-strip', oponente.armas || [], null);
 
   opHpMax = oponente.real_max_hp || oponente.max_hp || oponente.hp;
   actualizarBarraHP('op', opHpMax, opHpMax);
@@ -233,17 +249,20 @@ async function renderCombate(result) {
   const miNombre = miShaolinInfo.name;
   const miCol = document.getElementById('luchador-mi');
   const opCol = document.getElementById('luchador-op');
-  const paMiEl = document.getElementById('pa-mi-valor');
-  const paOpEl = document.getElementById('pa-op-valor');
   const rangoInd = document.getElementById('rango-indicator');
+  const pipsEl = document.getElementById('distance-pips');
 
   logEl.innerHTML = '';
-  rangoActual = 3;
-  actualizarPosicion(miCol, opCol, rangoActual);
+  p1 = 2;
+  p2 = 2;
+  actualizarPosicion();
 
-  function actualizarPosicion(l, r, rango) {
-    l.style.setProperty('--pos', rango);
-    r.style.setProperty('--pos', rango);
+  function actualizarPosicion() {
+    miCol.style.setProperty('--pos', p1);
+    opCol.style.setProperty('--pos', p2);
+    const dist = p1 + p2 - 1;
+    if (rangoInd) rangoInd.textContent = `Distancia ${dist} · ${DIST_NOMBRES[Math.min(Math.max(1, dist), 9)]}`;
+    if (pipsEl) pipsEl.textContent = '#'.repeat(Math.max(1, 9 - dist + 1)) + '○'.repeat(dist - 1);
   }
 
   function mostrarFloat(el, texto, color, escala = 1) {
@@ -256,60 +275,90 @@ async function renderCombate(result) {
     setTimeout(() => f.remove(), 1000);
   }
 
+  async function animarPaso(spriteId, skin, genero, dir) {
+    setFighterFrame(spriteId, skin, 'walk_1', genero);
+    await delay(150);
+    setFighterFrame(spriteId, skin, 'walk_2', genero);
+    await delay(150);
+    setFighterFrame(spriteId, skin, 'idle', genero);
+  }
+
   for (const entry of log) {
-    const esMi = entry.actor === miNombre || entry.atacante_nombre === miNombre || entry.target === miNombre;
     const esMiPersonaje = entry.actor === miNombre || entry.nombre === miNombre || entry.atacante_nombre === miNombre;
+    const esMi = esMiPersonaje;
 
     switch (entry.type) {
-      case 'combat_start':
-        rangoActual = entry.rango;
-        actualizarPosicion(miCol, opCol, rangoActual);
-        rangoInd.textContent = `Rango ${entry.rango} · ${entry.rangoNombre}`;
+      case 'combat_start': {
+        p1 = entry.p1 || 2;
+        p2 = entry.p2 || 2;
+        actualizarPosicion();
+        const d = p1 + p2 - 1;
+        rangoInd.textContent = `Distancia ${d} · ${DIST_NOMBRES[Math.min(Math.max(1, d), 9)]}`;
         break;
+      }
 
       case 'turn_start':
         await delay(300);
         break;
 
-      case 'pa':
-        if (esMiPersonaje) {
-          paMiEl.textContent = entry.pa;
-        } else {
-          paOpEl.textContent = entry.pa;
-        }
+      case 'pa': {
+        const valEl = esMiPersonaje ? document.getElementById('pa-mi-valor') : document.getElementById('pa-op-valor');
+        if (valEl) valEl.textContent = entry.pa;
         break;
+      }
 
       case 'draw_weapon':
       case 'switch_weapon': {
         await delay(200);
-        const col = esMiPersonaje ? miCol : opCol;
-        const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
-        const eq = document.getElementById(equipadaId);
-        if (entry.type === 'switch_weapon') {
-          mostrarFloat(col, '🔄', '#fbbf24', 1.2);
-          eq.innerHTML = `⚔️ ${entry.arma_nueva}`;
-          addLog(logEl, `<span class="info">🔄 ${entry.actor} cambió ${entry.arma_vieja} por ${entry.arma_nueva}</span>`);
-        } else {
-          mostrarFloat(col, '🗡️', '#fbbf24', 1.3);
-          eq.innerHTML = `⚔️ ${entry.arma}`;
+        const handId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
+        const hand = document.getElementById(handId);
+        const stripId = esMiPersonaje ? 'mi-weapons-strip' : 'op-weapons-strip';
+        const armas = esMiPersonaje ? miShaolinInfo.armas : (oponenteSeleccionado ? oponenteSeleccionado.armas : []);
+
+        if (entry.type === 'draw_weapon') {
+          const icono = weaponIcon((armas.find(a => a.nombre === entry.arma) || {}).familia || 'dao');
+          hand.textContent = icono;
+          hand.classList.remove('hidden');
+          renderWeaponStrip(stripId, armas, entry.arma);
+          mostrarFloat(esMiPersonaje ? miCol : opCol, icono, '#fbbf24', 1.3);
           addLog(logEl, `<span class="info">🗡️ ${entry.actor} sacó ${entry.arma}</span>`);
+        } else {
+          const iconoViejo = weaponIcon((armas.find(a => a.nombre === entry.arma_vieja) || {}).familia || 'dao');
+          const iconoNuevo = weaponIcon((armas.find(a => a.nombre === entry.arma_nueva) || {}).familia || 'dao');
+          hand.textContent = iconoNuevo;
+          hand.classList.remove('hidden');
+          renderWeaponStrip(stripId, armas, entry.arma_nueva);
+          mostrarFloat(esMiPersonaje ? miCol : opCol, '🔄', '#fbbf24', 1.2);
+          addLog(logEl, `<span class="info">🔄 ${entry.actor} cambió ${entry.arma_vieja} por ${entry.arma_nueva}</span>`);
         }
-        eq.classList.remove('hidden');
         break;
       }
 
       case 'move': {
-        await delay(300);
-        const col = esMiPersonaje ? miCol : opCol;
-        if (!esMiPersonaje) col.classList.add('atacando-izq');
-        else col.classList.add('atacando-der');
-        await delay(300);
-        rangoActual = entry.to;
-        actualizarPosicion(miCol, opCol, rangoActual);
-        rangoInd.textContent = `Rango ${entry.to} · ${RANGO_NOMBRE[entry.to]}`;
-        col.classList.remove('atacando-izq', 'atacando-der');
-        addLog(logEl, `<span class="info">${entry.actor} avanza</span>`);
         await delay(200);
+        const col = esMiPersonaje ? miCol : opCol;
+        const spriteId = esMiPersonaje ? 'mi-sprite' : 'op-sprite';
+        const info = esMiPersonaje ? miShaolinInfo : oponenteSeleccionado;
+        const skin = info ? info.skin : 'default';
+        const gen = info ? info.genero : 'masculino';
+
+        if (entry.p1 !== undefined) p1 = entry.p1;
+        if (entry.p2 !== undefined) p2 = entry.p2;
+
+        await animarPaso(spriteId, skin, gen, entry.retrocede ? -1 : 1);
+        actualizarPosicion();
+        const d = p1 + p2 - 1;
+        addLog(logEl, `<span class="info">${entry.actor} se mueve (${entry.distancia !== undefined ? 'Dist ' + entry.distancia : ''})</span>`);
+        await delay(200);
+        break;
+      }
+
+      case 'range_change': {
+        if (entry.p1 !== undefined) p1 = entry.p1;
+        if (entry.p2 !== undefined) p2 = entry.p2;
+        actualizarPosicion();
+        const d = p1 + p2 - 1;
+        addLog(logEl, `<span style="color:#8b6fa0">↔ ${entry.nombre || 'Distancia ' + d}</span>`);
         break;
       }
 
@@ -394,8 +443,12 @@ async function renderCombate(result) {
       case 'drop_weapon': {
         const col = esMiPersonaje ? miCol : opCol;
         mostrarFloat(col, '💔', '#ef4444', 1.3);
-        const equipadaId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
-        document.getElementById(equipadaId).classList.add('hidden');
+        const handId = esMiPersonaje ? 'mi-equipada' : 'op-equipada';
+        const hand = document.getElementById(handId);
+        hand.classList.add('hidden');
+        const stripId = esMiPersonaje ? 'mi-weapons-strip' : 'op-weapons-strip';
+        const armas = esMiPersonaje ? miShaolinInfo.armas : (oponenteSeleccionado ? oponenteSeleccionado.armas : []);
+        renderWeaponStrip(stripId, armas, null);
         addLog(logEl, `<span class="danio">💔 ${entry.actor} perdió su ${entry.arma}</span>`);
         break;
       }
@@ -412,11 +465,7 @@ async function renderCombate(result) {
       }
 
       case 'exposed':
-        addLog(logEl, `<span style="color:#f97316">⚠️ ${entry.actor || ''} expuesto en rango ${entry.rango} - defensa reducida</span>`);
-        break;
-
-      case 'range_change':
-        addLog(logEl, `<span style="color:#8b6fa0">↔ Rango ${entry.rango} · ${entry.nombre || RANGO_NOMBRE[entry.rango]}</span>`);
+        addLog(logEl, `<span style="color:#f97316">⚠️ ${entry.actor || ''} expuesto - defensa reducida</span>`);
         break;
 
       case 'combat_end':
@@ -456,7 +505,6 @@ async function renderCombate(result) {
           resultadoEl.appendChild(egg);
         }
 
-        // Post-combat actions
         const accEl = document.getElementById('acciones-post-combate');
         accEl.classList.remove('hidden');
         let btnsHtml = `<button class="btn btn-secundario" onclick="volverArena()">⬅ Elegir otro oponente</button>`;

@@ -203,7 +203,7 @@ const nombresBot = [
   'Viento Yang', 'Fuego Bao', 'Ola Zheng', 'Sombra Yue',
 ];
 
-const skins = ['default', 'tigre', 'dragon', 'grulla', 'sombra', 'loto'];
+const skins = ['default', 'Monje', 'tigre', 'dragon', 'grulla', 'sombra', 'loto'];
 
 function randomSkin() {
   return skins[Math.floor(Math.random() * skins.length)];

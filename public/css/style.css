@@ -459,175 +459,51 @@ input:focus, select:focus {
   text-align: center;
 }
 
-/* Combat info row */
-.combat-info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  margin-bottom: 8px;
-  background: rgba(30, 15, 50, 0.5);
-  border: 1px solid #4a3060;
-  border-radius: 8px;
-}
-
-.fighter-pa {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.pa-label {
-  color: #8b6fa0;
-}
-
-.pa-valor {
-  color: #fbbf24;
-}
-
-.rango-indicator {
-  font-size: 15px;
-  font-weight: bold;
-  color: #a78bfa;
-  text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
-}
-
-/* Battlefield */
+/* === CAMPO DE BATALLA: grid simétrico === */
 .campo-batalla {
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto 1fr;
   margin: 8px 0;
-  min-height: 280px;
+  min-height: 340px;
   background: rgba(30, 15, 50, 0.3);
   border: 1px solid #4a3060;
   border-radius: 12px;
   overflow: hidden;
-}
-
-.arena-strip {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid #4a3060;
-}
-
-.rango-marcador {
-  font-size: 10px;
-  color: #6a3a8a;
-  font-weight: bold;
-}
-
-.luchador-scene {
   position: relative;
-  height: 240px;
 }
 
-/* Fighter positioning by range */
-.luchador-arena {
-  position: absolute;
-  top: 16px;
-  width: 160px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(40, 20, 60, 0.85);
-  border: 2px solid #6a3a8a;
-  transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-}
-
-#luchador-mi {
-  left: calc(5% + (4 - var(--pos, 3)) * 8%);
-}
-
-#luchador-op {
-  left: calc(75% - (4 - var(--pos, 3)) * 8%);
-}
-
-.luchador-avatar {
-  font-size: 48px;
-  margin-bottom: 2px;
-  transition: transform 0.25s;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
+/* === ESQUINAS SUPERIORES: HP + weapons === */
+.hp-corner {
+  padding: 10px 14px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 5;
 }
-.luchador-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+.hp-corner.left  { align-items: flex-start; text-align: left; }
+.hp-corner.right { align-items: flex-end; text-align: right; }
 
-.luchador-nombre {
+.fighter-label {
   font-weight: bold;
   font-size: 14px;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.luchador-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2px;
-}
-
-.weapon-reserve {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  justify-content: flex-end;
-  min-height: 20px;
-}
-
-.weapon-reserve .reserva-item {
-  background: rgba(30, 15, 50, 0.6);
-  border: 1px solid #4a3060;
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 9px;
-  color: #8b6fa0;
-  white-space: nowrap;
-  line-height: 1.3;
-}
-
-.weapon-equipada {
-  display: inline-block;
-  padding: 2px 8px;
-  margin: 2px 0 4px 0;
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid #8b5cf6;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: bold;
-  color: #fbbf24;
-  animation: fadeInWeapon 0.3s ease;
-}
-
-@keyframes fadeInWeapon {
-  0% { opacity: 0; transform: translateY(-4px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.vs-medio {
-  font-size: 32px;
-  color: #f59e0b;
-  text-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
-  flex-shrink: 0;
-}
-
-.hp-contenedor {
   display: flex;
   align-items: center;
   gap: 6px;
 }
+.hp-corner.left  .fighter-label { flex-direction: row; }
+.hp-corner.right .fighter-label { flex-direction: row-reverse; }
+.fighter-icon { font-size: 18px; }
 
-.hp-barra-ext {
+.hp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 220px;
+}
+.hp-corner.right .hp-row { flex-direction: row-reverse; }
+
+.hp-bar-bg {
   flex: 1;
   height: 12px;
   background: rgba(0, 0, 0, 0.5);
@@ -640,35 +516,137 @@ input:focus, select:focus {
   border-radius: 6px;
   transition: width 0.4s ease;
 }
-
-.hp-relleno.hp-verde { background: linear-gradient(90deg, #16a34a, #22c55e); }
+.hp-relleno.hp-verde   { background: linear-gradient(90deg, #16a34a, #22c55e); }
 .hp-relleno.hp-naranja { background: linear-gradient(90deg, #ea580c, #f97316); }
-.hp-relleno.hp-rojo { background: linear-gradient(90deg, #dc2626, #ef4444); }
+.hp-relleno.hp-rojo    { background: linear-gradient(90deg, #dc2626, #ef4444); }
 
 .hp-texto {
   font-size: 11px;
   font-weight: bold;
   color: #e0d0f0;
-  min-width: 40px;
-  text-align: right;
+  min-width: 60px;
   white-space: nowrap;
 }
 
-/* Combat animations */
+/* === WEAPON STRIP (solo iconos) === */
+.weapon-strip {
+  display: flex;
+  gap: 4px;
+  min-height: 22px;
+  flex-wrap: wrap;
+}
+.hp-corner.left  .weapon-strip { justify-content: flex-start; }
+.hp-corner.right .weapon-strip { justify-content: flex-end; }
+
+.ws-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: rgba(30, 15, 50, 0.6);
+  border: 1px solid #4a3060;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+/* === CENTRO: personajes + distancia === */
+.arena-center {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+}
+
+.distance-indicator {
+  text-align: center;
+}
+.dist-nombre {
+  font-size: 15px;
+  font-weight: bold;
+  color: #a78bfa;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+}
+.dist-pips {
+  font-size: 12px;
+  color: #6a3a8a;
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+
+/* === FIGHTER SPRITES === */
+.fighter-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  min-height: 120px;
+}
+
+.fighter-sprite {
+  position: relative;
+  width: 90px;
+  text-align: center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fighter-sprite img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+}
+
+#luchador-mi {
+  transform: translateX(calc((var(--pos, 2) - 2) * -50px));
+}
+#luchador-op {
+  transform: translateX(calc((var(--pos, 2) - 2) * 50px));
+}
+
+.weapon-hand {
+  position: absolute;
+  top: 50%;
+  font-size: 22px;
+  z-index: 3;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  animation: fadeInWeapon 0.3s ease;
+}
+#luchador-mi .weapon-hand { right: -16px; }
+#luchador-op .weapon-hand { left: -16px; }
+
+.pa-badge {
+  font-size: 11px;
+  font-weight: bold;
+  color: #fbbf24;
+  margin-top: 4px;
+}
+
+@keyframes fadeInWeapon {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === ANIMACIONES DE COMBATE === */
 @keyframes atacar-der {
   0% { transform: translateX(0); }
   30% { transform: translateX(30px); }
   60% { transform: translateX(30px); }
   100% { transform: translateX(0); }
 }
-
 @keyframes atacar-izq {
   0% { transform: translateX(0); }
   30% { transform: translateX(-30px); }
   60% { transform: translateX(-30px); }
   100% { transform: translateX(0); }
 }
-
 @keyframes golpeado {
   0%, 100% { transform: translateX(0); }
   15% { transform: translateX(-6px); }
@@ -677,37 +655,33 @@ input:focus, select:focus {
   60% { transform: translateX(4px); }
   75% { transform: translateX(-2px); }
 }
-
 @keyframes flash-critico {
   0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
-  50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6), inset 0 0 40px rgba(245, 158, 11, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6); }
 }
-
+@keyframes anim-victoria {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes anim-derrota {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 @keyframes float-up {
   0% { opacity: 1; transform: translateY(0) scale(var(--escala, 1)); }
   100% { opacity: 0; transform: translateY(-60px) scale(calc(var(--escala, 1) * 1.2)); }
 }
 
-@keyframes anim-victoria {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes anim-derrota {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.luchador-arena.atacando-der .luchador-avatar { animation: atacar-der 0.6s ease; }
-.luchador-arena.atacando-izq .luchador-avatar { animation: atacar-izq 0.6s ease; }
-.luchador-arena.golpeado { animation: golpeado 0.4s ease; }
-.luchador-arena.flash-critico { animation: flash-critico 0.4s ease; }
-.luchador-arena.anim-victoria { animation: anim-victoria 0.8s ease infinite; }
-.luchador-arena.anim-derrota { animation: anim-derrota 0.8s ease infinite; }
+.fighter-sprite.atacando-der img { animation: atacar-der 0.6s ease; }
+.fighter-sprite.atacando-izq img { animation: atacar-izq 0.6s ease; }
+.fighter-sprite.golpeado img { animation: golpeado 0.4s ease; }
+.fighter-sprite.flash-critico { animation: flash-critico 0.4s ease; }
+.fighter-sprite.anim-victoria { animation: anim-victoria 0.8s ease infinite; }
+.fighter-sprite.anim-derrota { animation: anim-derrota 0.8s ease infinite; }
 
 .float-dmg {
   position: absolute;
-  top: 15%;
+  top: -10%;
   left: 50%;
   transform: translateX(-50%);
   font-size: 24px;
