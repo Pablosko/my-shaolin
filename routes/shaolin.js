@@ -5,6 +5,13 @@ const { getRandomArma, getRandomHabilidad, generarStatsIniciales, generarOpcione
 
 const router = express.Router();
 
+router.get('/arsenal', (req, res) => {
+  res.json({
+    armas: armasData.map(a => ({ nombre: a.nombre, familia: a.familia, tier: a.tier, dano_min: a.dano_min, dano_max: a.dano_max, drawCost: a.drawCost })),
+    habilidades: habilidadesData.map(h => ({ nombre: h.nombre, descripcion: h.descripcion })),
+  });
+});
+
 router.get('/', verificarToken, async (req, res) => {
   const shaolins = await db.query('SELECT * FROM shaolins WHERE user_id = ?', [req.userId]);
   const result = await Promise.all(shaolins.map(async b => {
@@ -178,7 +185,11 @@ router.post('/:id/level-up-start', verificarToken, async (req, res) => {
   const shaolin = await db.get('SELECT * FROM shaolins WHERE id = ? AND user_id = ? AND pending_level = 1', [req.params.id, req.userId]);
   if (!shaolin) return res.status(400).json({ error: 'No hay nivel pendiente' });
 
-  const opciones = generarOpcionesRecompensa();
+  const armasDB = await db.query('SELECT nombre FROM armas WHERE shaolin_id = ?', [shaolin.id]);
+  const habsDB = await db.query('SELECT nombre FROM habilidades WHERE shaolin_id = ?', [shaolin.id]);
+  const exclude = new Set([...armasDB.map(a => a.nombre), ...habsDB.map(h => h.nombre)]);
+
+  const opciones = generarOpcionesRecompensa(exclude);
   const statOptions = generarStatsOpcionesNivel();
 
   res.json({ opciones, statOptions });

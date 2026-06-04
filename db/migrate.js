@@ -63,6 +63,24 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('v6_latigo')`);
     console.log('Migration v6_latigo: renamed Látigo->Gancho');
   }
+
+  const v7Result = await client.execute(`SELECT name FROM _migrations WHERE name = 'v7_nombres_chinos'`);
+  if (v7Result.rows.length === 0) {
+    const renames = [
+      ['Cuchillo', 'Dao'], ['Daga', 'Bi Shou'], ['Cimitarra', 'Yan Dao'],
+      ['Hacha', 'Zhan Fu'], ['Sable', 'Da Dao'], ['Espada Corta', 'Jian'],
+      ['Sai', 'Tie Chi'], ['Espadón', 'Chang Jian'], ['Espada Larga', 'Ju Jian'],
+      ['Bastón', 'Gun'], ['Mangual', 'Liu Xing'], ['Lanza', 'Qiang'],
+      ['Alabarda', 'Ji'], ['Gancho', 'Gou'], ['Shuriken', 'Fei Biao'],
+    ];
+    for (const [old, nameNew] of renames) {
+      await client.execute({ sql: `UPDATE armas SET nombre = ? WHERE nombre = ?`, args: [nameNew, old] });
+    }
+    await client.execute(`UPDATE armas SET nombre = 'Gang Biao' WHERE nombre = 'Fei Biao de Acero'`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'v7_nombres_chinos'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('v7_nombres_chinos')`);
+    console.log('Migration v7_nombres_chinos: renamed weapons to Chinese names');
+  }
 }
 
 module.exports = { runMigrations };

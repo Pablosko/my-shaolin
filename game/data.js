@@ -55,35 +55,53 @@ const armas = [
   { nombre: 'Puño de Acero Fino', familia: 'puño', tier: 'acero_fino', dano_min: 5, dano_max: 10, drawCost: 0 },
   { nombre: 'Puño de Mitril', familia: 'puño', tier: 'mitril', dano_min: 7, dano_max: 13, drawCost: 0 },
   { nombre: 'Puño de Mitril Maestro', familia: 'puño', tier: 'mitril_maestro', dano_min: 9, dano_max: 17, drawCost: 0 },
-  // === DAO (6) ===
+  // === DAO 刀 (6) ===
+  { nombre: 'Dao', familia: 'dao', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
+  { nombre: 'Bi Shou', familia: 'dao', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 50 },
+  { nombre: 'Yan Dao', familia: 'dao', tier: 'acero', dano_min: 6, dano_max: 11, drawCost: 50 },
+  { nombre: 'Zhan Fu', familia: 'dao', tier: 'acero_fino', dano_min: 8, dano_max: 14, drawCost: 50 },
+  { nombre: 'Da Dao', familia: 'dao', tier: 'mitril', dano_min: 10, dano_max: 16, drawCost: 50 },
+  { nombre: 'Shen Dao', familia: 'dao', tier: 'mitril_maestro', dano_min: 12, dano_max: 19, drawCost: 50 },
+  // === JIAN 劍 (6) ===
+  { nombre: 'Jian', familia: 'jian', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
+  { nombre: 'Tie Chi', familia: 'jian', tier: 'hierro', dano_min: 3, dano_max: 7, drawCost: 50 },
+  { nombre: 'Chang Jian', familia: 'jian', tier: 'acero', dano_min: 7, dano_max: 13, drawCost: 50 },
+  { nombre: 'Ju Jian', familia: 'jian', tier: 'acero_fino', dano_min: 8, dano_max: 14, drawCost: 50 },
+  { nombre: 'Ling Jian', familia: 'jian', tier: 'mitril', dano_min: 9, dano_max: 16, drawCost: 50 },
+  { nombre: 'Tian Jian', familia: 'jian', tier: 'mitril_maestro', dano_min: 11, dano_max: 20, drawCost: 50 },
+  // === GUN 棍 (7) ===
+  { nombre: 'Gun', familia: 'gun', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
+  { nombre: 'Liu Xing', familia: 'gun', tier: 'acero', dano_min: 6, dano_max: 11, drawCost: 50 },
+  { nombre: 'Qiang', familia: 'gun', tier: 'acero', dano_min: 5, dano_max: 10, drawCost: 50 },
+  { nombre: 'Ji', familia: 'gun', tier: 'acero_fino', dano_min: 7, dano_max: 13, drawCost: 50 },
+  { nombre: 'Nunchaku', familia: 'gun', tier: 'acero', dano_min: 6, dano_max: 10, drawCost: 50 },
+  { nombre: 'Ling Gun', familia: 'gun', tier: 'mitril', dano_min: 9, dano_max: 16, drawCost: 50 },
+  { nombre: 'Jin Gun', familia: 'gun', tier: 'mitril_maestro', dano_min: 10, dano_max: 18, drawCost: 50 },
+  // === SHUANGGOU 鉤 (2) ===
+  { nombre: 'Gou', familia: 'shuanggou', tier: 'acero', dano_min: 5, dano_max: 9, drawCost: 50 },
+  { nombre: 'Shuang Gou', familia: 'shuanggou', tier: 'mitril', dano_min: 8, dano_max: 14, drawCost: 50 },
+  // === FEI BIAO 鏢 (2) ===
+  { nombre: 'Fei Biao', familia: 'fei_biao', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 50 },
+  { nombre: 'Gang Biao', familia: 'fei_biao', tier: 'acero', dano_min: 4, dano_max: 8, drawCost: 50 },
+];
+
+const armasLegacy = [
   { nombre: 'Cuchillo', familia: 'dao', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
   { nombre: 'Daga', familia: 'dao', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 50 },
   { nombre: 'Cimitarra', familia: 'dao', tier: 'acero', dano_min: 6, dano_max: 11, drawCost: 50 },
   { nombre: 'Hacha', familia: 'dao', tier: 'acero_fino', dano_min: 8, dano_max: 14, drawCost: 50 },
   { nombre: 'Sable', familia: 'dao', tier: 'mitril', dano_min: 10, dano_max: 16, drawCost: 50 },
-  { nombre: 'Dao de Mitril Maestro', familia: 'dao', tier: 'mitril_maestro', dano_min: 12, dano_max: 19, drawCost: 50 },
-  // === JIAN (6) ===
   { nombre: 'Espada Corta', familia: 'jian', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
   { nombre: 'Sai', familia: 'jian', tier: 'hierro', dano_min: 3, dano_max: 7, drawCost: 50 },
   { nombre: 'Espadón', familia: 'jian', tier: 'acero', dano_min: 7, dano_max: 13, drawCost: 50 },
   { nombre: 'Espada Larga', familia: 'jian', tier: 'acero_fino', dano_min: 8, dano_max: 14, drawCost: 50 },
-  { nombre: 'Jian de Mitril', familia: 'jian', tier: 'mitril', dano_min: 9, dano_max: 16, drawCost: 50 },
-  { nombre: 'Jian de Mitril Maestro', familia: 'jian', tier: 'mitril_maestro', dano_min: 11, dano_max: 20, drawCost: 50 },
-  // === GUN (6) ===
   { nombre: 'Bastón', familia: 'gun', tier: 'hierro', dano_min: 4, dano_max: 7, drawCost: 50 },
   { nombre: 'Mangual', familia: 'gun', tier: 'acero', dano_min: 6, dano_max: 11, drawCost: 50 },
   { nombre: 'Lanza', familia: 'gun', tier: 'acero', dano_min: 5, dano_max: 10, drawCost: 50 },
   { nombre: 'Alabarda', familia: 'gun', tier: 'acero_fino', dano_min: 7, dano_max: 13, drawCost: 50 },
-  { nombre: 'Gun de Mitril', familia: 'gun', tier: 'mitril', dano_min: 9, dano_max: 16, drawCost: 50 },
-  { nombre: 'Gun de Mitril Maestro', familia: 'gun', tier: 'mitril_maestro', dano_min: 10, dano_max: 18, drawCost: 50 },
-  // === SHUANGGOU (3) ===
+  { nombre: 'Gancho', familia: 'shuanggou', tier: 'acero', dano_min: 5, dano_max: 10, drawCost: 50 },
   { nombre: 'Látigo', familia: 'shuanggou', tier: 'acero', dano_min: 5, dano_max: 10, drawCost: 50 },
-  { nombre: 'Gancho', familia: 'shuanggou', tier: 'acero', dano_min: 5, dano_max: 9, drawCost: 50 },
-  { nombre: 'Shuanggou de Mitril', familia: 'shuanggou', tier: 'mitril', dano_min: 8, dano_max: 14, drawCost: 50 },
-  // === FEI BIAO (3) ===
   { nombre: 'Shuriken', familia: 'fei_biao', tier: 'hierro', dano_min: 3, dano_max: 6, drawCost: 50 },
-  { nombre: 'Fei Biao de Acero', familia: 'fei_biao', tier: 'acero', dano_min: 4, dano_max: 8, drawCost: 50 },
-  // === LEGACY (2) — se mantienen por compatibilidad, mapeadas a familia cercana ===
   { nombre: 'Maza', familia: 'puño', tier: 'acero', dano_min: 8, dano_max: 14, drawCost: 50 },
   { nombre: 'Martillo', familia: 'puño', tier: 'acero_fino', dano_min: 10, dano_max: 17, drawCost: 50 },
 ];
@@ -109,12 +127,28 @@ function calcularMaxHp(vitalidad, level) {
   return 50 + (vitalidad || 0) * 3 + level * 2;
 }
 
+const ARMAS_ACTIVAS = armas;
+
 function getRandomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function getRandomArma() {
-  return { ...getRandomItem(armas) };
+function getRandomArma(excludeNames) {
+  let pool = ARMAS_ACTIVAS;
+  if (excludeNames && excludeNames.size > 0) {
+    pool = ARMAS_ACTIVAS.filter(a => !excludeNames.has(a.nombre));
+  }
+  if (pool.length === 0) return null;
+  return { ...getRandomItem(pool) };
+}
+
+function getRandomHabilidad(excludeNames) {
+  let pool = habilidades;
+  if (excludeNames && excludeNames.size > 0) {
+    pool = habilidades.filter(h => !excludeNames.has(h.nombre));
+  }
+  if (pool.length === 0) return null;
+  return { ...getRandomItem(pool) };
 }
 
 const familiaToTipo = {
@@ -128,7 +162,7 @@ const familiaToTipo = {
 
 function resolverArma(armaDb) {
   if (!armaDb) return null;
-  const t = armas.find(a => a.nombre === armaDb.nombre);
+  const t = armas.find(a => a.nombre === armaDb.nombre) || armasLegacy.find(a => a.nombre === armaDb.nombre);
   if (!t) return armaDb;
   const bonus = ((armaDb.nivel || 1) - 1);
   return {
@@ -194,8 +228,12 @@ function generarBot(nivel = 1) {
 
   // Subidas de nivel: simular flujo real (recompensa + mejora de stats)
   for (let i = 2; i <= nivel; i++) {
+    const ownedArma = new Set(armas.map(a => a.nombre));
+    const ownedHab = new Set(habilidades.map(h => h.nombre));
+    const exclude = new Set([...ownedArma, ...ownedHab]);
+
     // Paso A: Elegir entre 2 recompensas (arma 40%, habilidad 30%, stat 30%)
-    const recompensas = generarOpcionesRecompensa();
+    const recompensas = generarOpcionesRecompensa(exclude);
     const recompensa = recompensas[Math.floor(Math.random() * recompensas.length)];
 
     if (recompensa.tipo === 'arma' && recompensa.item) {
@@ -275,10 +313,13 @@ function generarBots(cantidad, nivel = 1) {
 
 function generarOpcionesIniciales() {
   const opciones = [];
+  const usados = new Set();
   for (let i = 0; i < 2; i++) {
     const rand = Math.random();
     if (rand < 0.55) {
-      const item = getRandomArma();
+      const item = getRandomArma(usados);
+      if (!item) continue;
+      usados.add(item.nombre);
       opciones.push({
         index: i,
         tipo: 'arma',
@@ -287,7 +328,9 @@ function generarOpcionesIniciales() {
         descripcion: `Daño ${item.dano_min}-${item.dano_max}`,
       });
     } else {
-      const item = getRandomHabilidad();
+      const item = getRandomHabilidad(usados);
+      if (!item) continue;
+      usados.add(item.nombre);
       opciones.push({
         index: i,
         tipo: 'habilidad',
@@ -401,10 +444,13 @@ function aplicarSkillsYQi(b) {
   };
 }
 
-function generarRecompensaUnica() {
+function generarRecompensaUnica(excludeNames) {
+  const skip = excludeNames || new Set();
   const r = Math.random();
   if (r < 0.40) {
-    const item = getRandomArma();
+    const item = getRandomArma(skip);
+    if (!item) return generarRecompensaUnica(skip); // skip arma if all excluded
+    skip.add(item.nombre);
     return {
       tipo: 'arma',
       icono: '🗡️',
@@ -414,7 +460,9 @@ function generarRecompensaUnica() {
     };
   }
   if (r < 0.70) {
-    const item = getRandomHabilidad();
+    const item = getRandomHabilidad(skip);
+    if (!item) return generarRecompensaUnica(skip); // skip habilidad if all excluded
+    skip.add(item.nombre);
     const efecto = JSON.parse(item.efecto);
     const valorNv1 = efecto.valorPorNivel[1];
     return {
@@ -441,8 +489,11 @@ function generarRecompensaUnica() {
   };
 }
 
-function generarOpcionesRecompensa() {
-  return [generarRecompensaUnica(), generarRecompensaUnica()];
+function generarOpcionesRecompensa(excludeNames) {
+  const skip = new Set(excludeNames || []);
+  const r1 = generarRecompensaUnica(skip);
+  const r2 = generarRecompensaUnica(skip);
+  return [r1, r2];
 }
 
 function generarRewardNivel() {
@@ -475,7 +526,7 @@ function generarStatsOpcionesNivel() {
 }
 
 function getArmaStatsCompletas(nombre) {
-  const t = armas.find(a => a.nombre === nombre);
+  const t = armas.find(a => a.nombre === nombre) || armasLegacy.find(a => a.nombre === nombre);
   if (!t) return null;
   return {
     ...t,
@@ -545,5 +596,5 @@ module.exports = {
   getArmaStatsCompletas, calcularVelocidadEfectiva,
   eficaciaRango, modificadorTier, ventajaRelativa,
   getFamiliaBlock, getFamiliaDodge, getFamiliaWeaponSpeed,
-  familiaToTipo,
+  familiaToTipo, armasLegacy,
 };

@@ -165,31 +165,100 @@ function renderSegBarStatic(valor) {
 function renderBaseArmas(b) {
   const container = document.getElementById('base-armas-container');
   const box = document.getElementById('base-armas-box');
-  if (!b.armas || b.armas.length === 0) { box.classList.add('hidden'); return; }
   box.classList.remove('hidden');
-  container.innerHTML = b.armas.map(a => {
-    const bMin = a.dano_min - (a.nivel - 1);
-    const bMax = a.dano_max - (a.nivel - 1);
-    const levels = [1,2,3].map(l => ({
-      min: bMin + l - 1,
-      max: bMax + l - 1,
-    }));
-    return `
-      <div class="arma-card">
-        <div class="arma-card-icono">🗡️</div>
-        <div class="arma-card-nombre">${a.nombre}</div>
-        <div class="arma-card-nivel">Nv.${a.nivel}</div>
-        <div class="arma-card-dano">${a.dano_min}-${a.dano_max}</div>
-        <div class="arma-tooltip">
-          ${levels.map((lvl, i) => {
-            const n = i + 1;
-            const cls = n === a.nivel ? 'actual' : n < a.nivel ? 'pasado' : 'futuro';
-            return `<div class="arma-tooltip-row ${cls}"><span>Nv.${n}</span><span>${lvl.min}-${lvl.max}</span></div>`;
-          }).join('')}
+
+  const owned = b.armas || [];
+  const ownedNames = new Set(owned.map(a => a.nombre));
+
+  fetch('/api/shaolins/arsenal')
+    .then(r => r.json())
+    .then(arsenal => {
+      const allWeapons = arsenal.armas || [];
+      container.innerHTML = allWeapons.map(w => {
+        const esTuya = ownedNames.has(w.nombre);
+        const own = owned.find(a => a.nombre === w.nombre);
+        const nivel = own ? own.nivel : 0;
+        const dMin = own ? own.dano_min : w.dano_min;
+        const dMax = own ? own.dano_max : w.dano_max;
+        const cls = esTuya ? 'own' : 'lock';
+
+        return `
+          <div class="arma-card ${cls}">
+            <div class="arma-card-icono">${esTuya ? '🗡️' : '🔒'}</div>
+            <div class="arma-card-nombre">${w.nombre}</div>
+            <div class="arma-card-nivel">${esTuya ? 'Nv.' + nivel : '---'}</div>
+            <div class="arma-card-dano">${dMin}-${dMax}</div>
+            <div class="arma-familia">${w.familia} · ${w.tier}</div>
+          </div>
+        `;
+      }).join('');
+    })
+    .catch(() => {
+      container.innerHTML = '<span style=color:#8b6fa0>Error al cargar arsenal</span>';
+    });
+}
+
+let arsenalCache = null;
+async function getArsenal() {
+  if (arsenalCache) return arsenalCache;
+  const r = await fetch('/api/shaolins/arsenal');
+  arsenalCache = await r.json();
+  return arsenalCache;
+}
+
+async function renderBaseHabilidades(b) {
+  const container = document.getElementById('base-habilidades-container');
+  const box = document.getElementById('base-habilidades-box');
+  box.classList.remove('hidden');
+
+  const owned = b.habilidades || [];
+  const ownedNames = new Set(owned.map(h => h.nombre));
+
+  try {
+    const arsenal = await getArsenal();
+    const allHabs = arsenal.habilidades || [];
+    container.innerHTML = allHabs.map(h => {
+      const esTuya = ownedNames.has(h.nombre);
+      const own = owned.find(x => x.nombre === h.nombre);
+      const cls = esTuya ? 'own' : 'lock';
+      const nivel = own ? own.nivel : 0;
+      const desc = esTuya
+        ? obtenerDescripcionHabilidad(own)
+        : h.descripcion;
+
+      return `
+        <div class="hab-card ${cls}">
+          <div class="hab-card-icono">${esTuya ? '✨' : '🔒'}</div>
+          <div class="hab-card-nombre">${h.nombre}</div>
+          <div class="hab-card-nivel">${esTuya ? 'Nv.' + nivel : '---'}</div>
+          <div class="hab-card-desc">${desc}</div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  } catch (_) {
+    container.innerHTML = '<span style=color:#8b6fa0>Error al cargar arsenal</span>';
+  }
+}
+
+function obtenerDescripcionHabilidad(hab) {
+  try {
+    const e = JSON.parse(hab.efecto);
+    const v = e.valorPorNivel ? (e.valorPorNivel[hab.nivel || 1] || 0) : 0;
+    if (e.stat === 'qi_boost') return `×${(1 + v).toFixed(2)} Qi`;
+    if (e.stat.includes('porcentual')) return `+${Math.round(v * 100)}% ${capitalizeStat(e.stat.replace('_porcentual', ''))}`;
+    if (['defensa', 'resistencia'].includes(e.stat)) return `-${Math.round(v * 100)}% daño`;
+    if (e.stat === 'robo_vida') return `+${Math.round(v * 100)}% robo`;
+    if (e.stat === 'critico') return `+${Math.round(v * 100)}% crítico`;
+    if (e.stat === 'esquiva') return `+${Math.round(v * 100)}% esquiva`;
+    if (e.stat === 'combo') return `+${Math.round(v * 100)}% combo`;
+    if (e.stat === 'contraataque') return `+${Math.round(v * 100)}% contra`;
+  } catch (_) {}
+  return hab.descripcion || '';
+}
+
+function capitalizeStat(s) {
+  const map = { fuerza: 'Fue', agilidad: 'Agi', velocidad: 'Vel', hp: 'HP' };
+  return map[s] || s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function renderBaseHabilidades(b) {
