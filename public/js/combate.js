@@ -21,7 +21,7 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
   const realSkin = skin === 'default' ? 'Monje' : skin;
-  const cb = 'v17';
+  const cb = 'v18';
   const urlGen = `/images/skins/${realSkin}-${genero}-${frame}.png?${cb}`;
   const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
   console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" urlGen="${urlGen}" fallback="${url}"`);
@@ -294,6 +294,9 @@ async function renderCombate(result) {
     f.textContent = texto;
     f.style.color = color;
     f.style.setProperty('--escala', escala);
+    if (el === opCol) {
+      f.style.setProperty('--unflip', '-1');
+    }
     el.appendChild(f);
     setTimeout(() => f.remove(), 1000);
   }
@@ -400,17 +403,15 @@ async function renderCombate(result) {
         const atkSkin = atkInfo ? atkInfo.skin : 'default';
         const atkGen = atkInfo ? atkInfo.genero : 'masculino';
 
-        if (!entry.conArma) {
-          if (prevActor !== entry.actor || !comboSides[entry.actor]) {
-            comboSides[entry.actor] = 'right';
-          }
-          comboSides[entry.actor] = comboSides[entry.actor] === 'left' ? 'right' : 'left';
-          const side = comboSides[entry.actor];
-          const isCrit = entry.type === 'critical_hit';
-          const isKick = entry.accion === 'pateó';
-          const hitFrame = isCrit ? 'hit_low' : (isKick ? `kick_${side}` : `hit_${side}`);
-          setFighterFrame(atkSpriteId, atkSkin, hitFrame, atkGen);
+        if (prevActor !== entry.actor || !comboSides[entry.actor]) {
+          comboSides[entry.actor] = 'right';
         }
+        comboSides[entry.actor] = comboSides[entry.actor] === 'left' ? 'right' : 'left';
+        const side = comboSides[entry.actor];
+        const isCrit = entry.type === 'critical_hit';
+        const isKick = entry.accion === 'pateó' && !entry.conArma;
+        const hitFrame = isCrit ? 'hit_low' : (isKick ? `kick_${side}` : `hit_${side}`);
+        setFighterFrame(atkSpriteId, atkSkin, hitFrame, atkGen);
 
         atkCol.classList.add(esMi ? 'atacando-der' : 'atacando-izq');
         await delay(250);

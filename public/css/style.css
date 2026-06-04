@@ -692,7 +692,7 @@ input:focus, select:focus {
   position: absolute;
   top: -10%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleX(var(--unflip, 1));
   font-size: 24px;
   font-weight: bold;
   text-shadow: 0 2px 8px rgba(0,0,0,0.8);
