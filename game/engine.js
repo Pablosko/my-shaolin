@@ -348,6 +348,16 @@ function simularCombate(b1, b2, skills1, skills2, onPerderArma) {
       }
     }
 
+    // Strategic retreat: 15% chance to step back after attack
+    if (paLeft >= costoPaso(actor.pos) && actor.pos < 5 && Math.random() < 0.15) {
+      const stepCost = costoPaso(actor.pos);
+      paLeft -= stepCost;
+      const { oldPos, newPos } = doMove(actor, 1);
+      const newDist = distancia();
+      ev('move', { actor: actor.name, from: oldPos, to: newPos, p1: c1.pos, p2: c2.pos, distancia: newDist, cost: stepCost, retrocede: true });
+      ev('range_change', { distancia: newDist, p1: c1.pos, p2: c2.pos, nombre: nombreDistancia(newDist) });
+    }
+
     // Exposed check
     if (distancia() <= 1 && defender.pa_react < 25) {
       defender.exposed = true;

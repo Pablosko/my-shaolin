@@ -20,7 +20,7 @@ function weaponIcon(familia) {
 function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
-  const url = `/images/skins/${skin}/${frame}.png`;
+  const url = `/images/skins/${skin}-${frame}.png`;
   el.onerror = function() {
     this.onerror = null;
     const legacyUrl = getSkinUrl(genero, skin);
