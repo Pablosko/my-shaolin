@@ -600,6 +600,7 @@ input:focus, select:focus {
   display: block;
   margin: 0 auto;
   image-rendering: pixelated;
+  transition: opacity 80ms ease;
 }
 
 #luchador-mi {
@@ -637,17 +638,10 @@ input:focus, select:focus {
 }
 
 /* === ANIMACIONES DE COMBATE === */
-@keyframes atacar-der {
-  0% { transform: translateX(0); }
-  30% { transform: translateX(30px); }
-  60% { transform: translateX(30px); }
-  100% { transform: translateX(0); }
-}
-@keyframes atacar-izq {
-  0% { transform: translateX(0); }
-  30% { transform: translateX(-30px); }
-  60% { transform: translateX(-30px); }
-  100% { transform: translateX(0); }
+@keyframes atacar {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 @keyframes golpeado {
   0%, 100% { transform: translateX(0); }
@@ -681,8 +675,8 @@ input:focus, select:focus {
   100% { opacity: 0; transform: translateY(-60px) scale(calc(var(--escala, 1) * 1.2)); }
 }
 
-.fighter-sprite.atacando-der img { animation: atacar-der 0.6s ease; }
-.fighter-sprite.atacando-izq img { animation: atacar-izq 0.6s ease; }
+.fighter-sprite.atacando-der img { animation: atacar 0.4s ease; }
+.fighter-sprite.atacando-izq img { animation: atacar 0.4s ease; }
 .fighter-sprite.golpeado img { animation: golpeado 0.4s ease; }
 .fighter-sprite.flash-critico { animation: flash-critico 0.4s ease; }
 .fighter-sprite.anim-victoria img { animation: anim-victoria 0.8s ease infinite; }

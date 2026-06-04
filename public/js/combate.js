@@ -21,7 +21,7 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
   const realSkin = skin === 'default' ? 'Monje' : skin;
-  const cb = 'v18';
+  const cb = 'v19';
   const urlGen = `/images/skins/${realSkin}-${genero}-${frame}.png?${cb}`;
   const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
   console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" urlGen="${urlGen}" fallback="${url}"`);
@@ -414,7 +414,7 @@ async function renderCombate(result) {
         setFighterFrame(atkSpriteId, atkSkin, hitFrame, atkGen);
 
         atkCol.classList.add(esMi ? 'atacando-der' : 'atacando-izq');
-        await delay(250);
+        await delay(400);
 
         const esCrit = entry.type === 'critical_hit';
         const color = esCrit ? '#f59e0b' : '#ef4444';
