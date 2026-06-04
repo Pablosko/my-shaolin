@@ -21,7 +21,7 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
   const realSkin = skin === 'default' ? 'Monje' : skin;
-  const cb = 'v12';
+  const cb = 'v13';
   const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
   console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" url="${url}"`);
   el.onerror = function() {
