@@ -21,11 +21,16 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
   const url = `/images/skins/${skin}/${frame}.png`;
-  el.src = url;
   el.onerror = function() {
     this.onerror = null;
-    this.src = getSkinUrl(genero, skin);
+    const legacyUrl = getSkinUrl(genero, skin);
+    this.onerror = function() {
+      this.onerror = null;
+      this.src = getSkinUrl(genero, 'default');
+    };
+    this.src = legacyUrl;
   };
+  el.src = url;
 }
 
 async function loadArena() {
