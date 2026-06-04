@@ -21,7 +21,7 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
   const realSkin = skin === 'default' ? 'Monje' : skin;
-  const cb = 'v16';
+  const cb = 'v17';
   const urlGen = `/images/skins/${realSkin}-${genero}-${frame}.png?${cb}`;
   const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
   console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" urlGen="${urlGen}" fallback="${url}"`);
@@ -266,6 +266,8 @@ function volverArena() {
 async function renderCombate(result) {
   console.log('[renderCombate] starting - p1:', p1, 'p2:', p2, 'miShaolinInfo.skin:', miShaolinInfo.skin, 'log.length:', result.log.length);
   const log = result.log;
+  let prevActor = null;
+  const comboSides = {};
   const logEl = document.getElementById('log-combate');
   const miNombre = miShaolinInfo.name;
   const miCol = document.getElementById('luchador-mi');
@@ -393,6 +395,23 @@ async function renderCombate(result) {
         await delay(200);
         const atkCol = esMi ? miCol : opCol;
         const defCol = esMi ? opCol : miCol;
+        const atkSpriteId = esMi ? 'mi-sprite' : 'op-sprite';
+        const atkInfo = esMi ? miShaolinInfo : oponenteSeleccionado;
+        const atkSkin = atkInfo ? atkInfo.skin : 'default';
+        const atkGen = atkInfo ? atkInfo.genero : 'masculino';
+
+        if (!entry.conArma) {
+          if (prevActor !== entry.actor || !comboSides[entry.actor]) {
+            comboSides[entry.actor] = 'right';
+          }
+          comboSides[entry.actor] = comboSides[entry.actor] === 'left' ? 'right' : 'left';
+          const side = comboSides[entry.actor];
+          const isCrit = entry.type === 'critical_hit';
+          const isKick = entry.accion === 'pateó';
+          const hitFrame = isCrit ? 'hit_low' : (isKick ? `kick_${side}` : `hit_${side}`);
+          setFighterFrame(atkSpriteId, atkSkin, hitFrame, atkGen);
+        }
+
         atkCol.classList.add(esMi ? 'atacando-der' : 'atacando-izq');
         await delay(250);
 
@@ -407,7 +426,9 @@ async function renderCombate(result) {
         const critTxt = esCrit ? ' 🔥 ¡CRÍTICO!' : '';
         addLog(logEl, `<span class="${esCrit ? 'critico' : 'danio'}">${entry.actor} ${entry.accion} a ${entry.target} -${entry.damage}HP${armaTxt}${critTxt}</span>`);
 
+        setFighterFrame(atkSpriteId, atkSkin, 'idle', atkGen);
         atkCol.classList.remove('atacando-der', 'atacando-izq');
+        prevActor = entry.actor;
         break;
       }
 
