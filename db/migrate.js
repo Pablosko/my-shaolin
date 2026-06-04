@@ -81,7 +81,6 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('v7_nombres_chinos')`);
     console.log('Migration v7_nombres_chinos: renamed weapons to Chinese names');
   }
-}
 
   const v8Result = await client.execute(`SELECT name FROM _migrations WHERE name = 'v8_default_skin_monje'`);
   if (v8Result.rows.length === 0) {
@@ -90,6 +89,6 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('v8_default_skin_monje')`);
     console.log('Migration v8_default_skin_monje: all default skins changed to Monje');
   }
-
+}
 
 module.exports = { runMigrations };
