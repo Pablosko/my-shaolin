@@ -162,7 +162,7 @@ function renderSegBarStatic(valor) {
   return html;
 }
 
-function renderBaseArmas(b) {
+async function renderBaseArmas(b) {
   const container = document.getElementById('base-armas-container');
   const box = document.getElementById('base-armas-box');
   box.classList.remove('hidden');
@@ -170,32 +170,44 @@ function renderBaseArmas(b) {
   const owned = b.armas || [];
   const ownedNames = new Set(owned.map(a => a.nombre));
 
-  fetch('/api/shaolins/arsenal')
-    .then(r => r.json())
-    .then(arsenal => {
-      const allWeapons = arsenal.armas || [];
-      container.innerHTML = allWeapons.map(w => {
-        const esTuya = ownedNames.has(w.nombre);
-        const own = owned.find(a => a.nombre === w.nombre);
-        const nivel = own ? own.nivel : 0;
-        const dMin = own ? own.dano_min : w.dano_min;
-        const dMax = own ? own.dano_max : w.dano_max;
-        const cls = esTuya ? 'own' : 'lock';
+  try {
+    const r = await fetch('/api/shaolins/arsenal');
+    const arsenal = await r.json();
+    const allWeapons = arsenal.armas || [];
+    container.innerHTML = allWeapons.map(w => {
+      const esTuya = ownedNames.has(w.nombre);
+      const own = owned.find(a => a.nombre === w.nombre);
+      const nivel = own ? own.nivel : 0;
+      const cls = esTuya ? 'own' : 'lock';
 
-        return `
-          <div class="arma-card ${cls}">
-            <div class="arma-card-icono">${esTuya ? '🗡️' : '🔒'}</div>
-            <div class="arma-card-nombre">${w.nombre}</div>
-            <div class="arma-card-nivel">${esTuya ? 'Nv.' + nivel : '---'}</div>
-            <div class="arma-card-dano">${dMin}-${dMax}</div>
-            <div class="arma-familia">${w.familia} · ${w.tier}</div>
-          </div>
-        `;
-      }).join('');
-    })
-    .catch(() => {
-      container.innerHTML = '<span style=color:#8b6fa0>Error al cargar arsenal</span>';
-    });
+      let tooltipHtml = '';
+      if (esTuya) {
+        const bMin = own.dano_min - (nivel - 1);
+        const bMax = own.dano_max - (nivel - 1);
+        const levels = [1, 2, 3].map(l => ({ min: bMin + l - 1, max: bMax + l - 1 }));
+        tooltipHtml = levels.map((lvl, i) => {
+          const n = i + 1;
+          const rowCls = n === nivel ? 'actual' : n < nivel ? 'pasado' : 'futuro';
+          return `<div class="arma-tooltip-row ${rowCls}"><span>Nv.${n}</span><span>${lvl.min}-${lvl.max}</span></div>`;
+        }).join('');
+      } else {
+        tooltipHtml = `<div class="arma-tooltip-row"><span style="color:#a080b8">${w.familia} · ${w.tier}</span></div>`;
+      }
+
+      return `
+        <div class="arma-card ${cls}">
+          <div class="arma-card-icono">${esTuya ? '🗡️' : '🔒'}</div>
+          <div class="arma-card-nombre">${w.nombre}</div>
+          <div class="arma-card-nivel">${esTuya ? 'Nv.' + nivel : '---'}</div>
+          ${esTuya ? `<div class="arma-card-dano">${own.dano_min}-${own.dano_max}</div>` : ''}
+          <div class="arma-familia">${w.familia} · ${w.tier}</div>
+          <div class="arma-tooltip">${tooltipHtml}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (_) {
+    container.innerHTML = '<span style=color:#8b6fa0>Error al cargar arsenal</span>';
+  }
 }
 
 let arsenalCache = null;
@@ -222,16 +234,56 @@ async function renderBaseHabilidades(b) {
       const own = owned.find(x => x.nombre === h.nombre);
       const cls = esTuya ? 'own' : 'lock';
       const nivel = own ? own.nivel : 0;
-      const desc = esTuya
-        ? obtenerDescripcionHabilidad(own)
-        : h.descripcion;
+
+      let tooltipHtml = '';
+      if (esTuya) {
+        let levels = [];
+        try {
+          const e = JSON.parse(own.efecto);
+          for (let n = 1; n <= 3; n++) {
+            const v = e.valorPorNivel ? (e.valorPorNivel[n] || 0) : 0;
+            if (e.stat === 'qi_boost') levels.push(`×${(1 + v).toFixed(2)} Qi`);
+            else if (e.stat.includes('porcentual')) levels.push(`+${Math.round(v * 100)}% ${capitalizeStat(e.stat.replace('_porcentual', ''))}`);
+            else if (['defensa', 'resistencia'].includes(e.stat)) levels.push(`-${Math.round(v * 100)}% daño`);
+            else if (e.stat === 'robo_vida') levels.push(`Robo ${Math.round(v * 100)}%`);
+            else if (e.stat === 'combo') levels.push(`+${Math.round(v * 100)}% combo`);
+            else if (e.stat === 'contraataque') levels.push(`+${Math.round(v * 100)}% contra`);
+            else levels.push(`+${Math.round(v * 100)}%`);
+          }
+        } catch (_) {}
+        tooltipHtml = levels.map((text, i) => {
+          const n = i + 1;
+          const rowCls = n === nivel ? 'actual' : n < nivel ? 'pasado' : 'futuro';
+          return `<div class="hab-tooltip-row ${rowCls}"><span>Nv.${n}</span><span>${text}</span></div>`;
+        }).join('');
+      } else {
+        tooltipHtml = `<div class="hab-tooltip-row"><span style="color:#a080b8">${h.descripcion}</span></div>`;
+      }
+
+      let desc = '';
+      if (esTuya) {
+        try {
+          const e = JSON.parse(own.efecto);
+          const v = e.valorPorNivel ? (e.valorPorNivel[nivel || 1] || 0) : 0;
+          if (e.stat === 'qi_boost') desc = `×${(1 + v).toFixed(2)} Qi`;
+          else if (e.stat.includes('porcentual')) desc = `+${Math.round(v * 100)}% ${capitalizeStat(e.stat.replace('_porcentual', ''))}`;
+          else if (['defensa', 'resistencia'].includes(e.stat)) desc = `-${Math.round(v * 100)}% daño`;
+          else if (e.stat === 'robo_vida') desc = `+${Math.round(v * 100)}% robo`;
+          else if (e.stat === 'critico') desc = `+${Math.round(v * 100)}% crítico`;
+          else if (e.stat === 'esquiva') desc = `+${Math.round(v * 100)}% esquiva`;
+          else if (e.stat === 'combo') desc = `+${Math.round(v * 100)}% combo`;
+          else if (e.stat === 'contraataque') desc = `+${Math.round(v * 100)}% contra`;
+        } catch (_) {}
+      }
 
       return `
         <div class="hab-card ${cls}">
           <div class="hab-card-icono">${esTuya ? '✨' : '🔒'}</div>
           <div class="hab-card-nombre">${h.nombre}</div>
           <div class="hab-card-nivel">${esTuya ? 'Nv.' + nivel : '---'}</div>
-          <div class="hab-card-desc">${desc}</div>
+          ${esTuya ? `<div class="hab-card-desc">${h.descripcion || ''}</div>` : ''}
+          ${esTuya ? `<div class="hab-card-efecto">${desc}</div>` : ''}
+          <div class="hab-tooltip">${tooltipHtml}</div>
         </div>
       `;
     }).join('');
@@ -240,69 +292,9 @@ async function renderBaseHabilidades(b) {
   }
 }
 
-function obtenerDescripcionHabilidad(hab) {
-  try {
-    const e = JSON.parse(hab.efecto);
-    const v = e.valorPorNivel ? (e.valorPorNivel[hab.nivel || 1] || 0) : 0;
-    if (e.stat === 'qi_boost') return `×${(1 + v).toFixed(2)} Qi`;
-    if (e.stat.includes('porcentual')) return `+${Math.round(v * 100)}% ${capitalizeStat(e.stat.replace('_porcentual', ''))}`;
-    if (['defensa', 'resistencia'].includes(e.stat)) return `-${Math.round(v * 100)}% daño`;
-    if (e.stat === 'robo_vida') return `+${Math.round(v * 100)}% robo`;
-    if (e.stat === 'critico') return `+${Math.round(v * 100)}% crítico`;
-    if (e.stat === 'esquiva') return `+${Math.round(v * 100)}% esquiva`;
-    if (e.stat === 'combo') return `+${Math.round(v * 100)}% combo`;
-    if (e.stat === 'contraataque') return `+${Math.round(v * 100)}% contra`;
-  } catch (_) {}
-  return hab.descripcion || '';
-}
-
 function capitalizeStat(s) {
   const map = { fuerza: 'Fue', agilidad: 'Agi', velocidad: 'Vel', hp: 'HP' };
   return map[s] || s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function renderBaseHabilidades(b) {
-  const container = document.getElementById('base-habilidades-container');
-  const box = document.getElementById('base-habilidades-box');
-  if (!b.habilidades || b.habilidades.length === 0) { box.classList.add('hidden'); return; }
-  box.classList.remove('hidden');
-  container.innerHTML = b.habilidades.map(h => {
-    let efectoActual = '?';
-    let levels = [];
-    try {
-      const e = JSON.parse(h.efecto);
-      for (let n = 1; n <= 3; n++) {
-        const v = e.valorPorNivel ? (e.valorPorNivel[n] || 0) : 0;
-        if (e.stat === 'qi_boost') levels.push(`×${(1 + v).toFixed(2)} Qi`);
-        else if (e.stat.includes('porcentual')) levels.push(`+${Math.round(v * 100)}% ${capitalizeStat(e.stat.replace('_porcentual', ''))}`);
-        else if (['defensa', 'resistencia'].includes(e.stat)) levels.push(`-${Math.round(v * 100)}% daño`);
-        else if (e.stat === 'robo_vida') levels.push(`Robo ${Math.round(v * 100)}%`);
-        else if (e.stat === 'combo') levels.push(`+${Math.round(v * 100)}% combo`);
-        else levels.push(`+${Math.round(v * 100)}%`);
-      }
-      const v = e.valorPorNivel ? (e.valorPorNivel[h.nivel] || e.valorPorNivel[1] || 0) : 0;
-      if (e.stat === 'qi_boost') efectoActual = `×${(1 + v).toFixed(2)} Qi`;
-      else if (e.stat.includes('porcentual')) efectoActual = `+${Math.round(v * 100)}%`;
-      else if (['defensa', 'resistencia'].includes(e.stat)) efectoActual = `-${Math.round(v * 100)}% daño`;
-      else efectoActual = `+${Math.round(v * 100)}%`;
-    } catch (_) {}
-    return `
-      <div class="hab-card">
-        <div class="hab-card-icono">✨</div>
-        <div class="hab-card-nombre">${h.nombre}</div>
-        <div class="hab-card-nivel">Nv.${h.nivel || 1}</div>
-        <div class="hab-card-desc">${h.descripcion || ''}</div>
-        <div class="hab-card-efecto">${efectoActual}</div>
-        <div class="hab-tooltip">
-          ${levels.map((text, i) => {
-            const n = i + 1;
-            const cls = n === h.nivel ? 'actual' : n < h.nivel ? 'pasado' : 'futuro';
-            return `<div class="hab-tooltip-row ${cls}"><span>Nv.${n}</span><span>${text}</span></div>`;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 function renderNotFound() {
@@ -331,10 +323,6 @@ function formatDate(dateStr) {
   if (!dateStr) return 'desconocido';
   const d = new Date(dateStr);
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-function capitalizeStat(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function escapeHtml(str) {
