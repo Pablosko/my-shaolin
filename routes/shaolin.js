@@ -113,7 +113,7 @@ router.post('/', verificarToken, async (req, res) => {
   }
 
   const stats = generarStatsIniciales(genero);
-  const skinFinal = skin && skin !== 'default' ? skin : 'default';
+  const skinFinal = skin && skin !== 'default' ? skin : 'Monje';
 
   const result = await db.run(
     'INSERT INTO shaolins (user_id, name, genero, skin, hp, max_hp, fuerza, agilidad, velocidad, vitalidad) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

@@ -83,4 +83,13 @@ async function runMigrations(client) {
   }
 }
 
+  const v8Result = await client.execute(`SELECT name FROM _migrations WHERE name = 'v8_default_skin_monje'`);
+  if (v8Result.rows.length === 0) {
+    await client.execute(`UPDATE shaolins SET skin = 'Monje' WHERE skin = 'default'`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'v8_default_skin_monje'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('v8_default_skin_monje')`);
+    console.log('Migration v8_default_skin_monje: all default skins changed to Monje');
+  }
+
+
 module.exports = { runMigrations };
