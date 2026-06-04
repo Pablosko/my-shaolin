@@ -39,50 +39,48 @@
         <h2>⚔️ <span id="combate-mode-label">COMBATE</span></h2>
 
         <div class="campo-batalla">
-          <!-- Esquina superior izquierda: MI personaje -->
-          <div class="hp-corner left">
-            <div class="fighter-label">
-              <span class="fighter-icon" id="mi-icon">🗡️</span>
-              <span class="fighter-name" id="mi-nombre">-</span>
+          <!-- Fila superior: HUD completo -->
+          <div class="hud-row">
+            <div class="hp-corner left">
+              <div class="fighter-label">
+                <span class="fighter-icon" id="mi-icon">🗡️</span>
+                <span class="fighter-name" id="mi-nombre">-</span>
+              </div>
+              <div class="hp-row">
+                <div class="hp-bar-bg"><div class="hp-relleno hp-verde" id="mi-hp-relleno"></div></div>
+                <span class="hp-texto" id="mi-hp-texto">-/-</span>
+              </div>
+              <div class="weapon-strip" id="mi-weapons-strip"></div>
             </div>
-            <div class="hp-row">
-              <div class="hp-bar-bg"><div class="hp-relleno hp-verde" id="mi-hp-relleno"></div></div>
-              <span class="hp-texto" id="mi-hp-texto">-/-</span>
-            </div>
-            <div class="weapon-strip" id="mi-weapons-strip"></div>
-          </div>
-
-          <!-- Centro: personajes + distancia -->
-          <div class="arena-center">
-            <div class="distance-indicator">
+            <div class="dist-center">
               <div class="dist-nombre" id="rango-indicator">Distancia 3 · Corta</div>
-              <div class="dist-pips" id="distance-pips">•••••••••</div>
+              <div class="dist-pips" id="distance-pips"># # # # # # # # #</div>
             </div>
-            <div class="fighter-zone">
-              <div class="fighter-sprite" id="luchador-mi" style="--pos:2">
-                <img id="mi-sprite" src="" alt="P1" />
-                <div class="weapon-hand hidden" id="mi-equipada"></div>
-                <div class="pa-badge">PA: <span id="pa-mi-valor">0</span></div>
+            <div class="hp-corner right">
+              <div class="fighter-label">
+                <span class="fighter-name" id="op-nombre">-</span>
+                <span class="fighter-icon" id="op-icon">🤖</span>
               </div>
-              <div class="fighter-sprite" id="luchador-op" style="--pos:2">
-                <img id="op-sprite" src="" alt="P2" />
-                <div class="weapon-hand hidden" id="op-equipada"></div>
-                <div class="pa-badge">PA: <span id="pa-op-valor">0</span></div>
+              <div class="hp-row">
+                <div class="hp-bar-bg"><div class="hp-relleno hp-rojo" id="op-hp-relleno"></div></div>
+                <span class="hp-texto" id="op-hp-texto">-/-</span>
               </div>
+              <div class="weapon-strip" id="op-weapons-strip"></div>
             </div>
           </div>
 
-          <!-- Esquina superior derecha: OPONENTE -->
-          <div class="hp-corner right">
-            <div class="fighter-label">
-              <span class="fighter-name" id="op-nombre">-</span>
-              <span class="fighter-icon" id="op-icon">🤖</span>
+          <!-- Fondo de arena: sprites distribuidos izquierda ↔ derecha -->
+          <div class="arena-floor">
+            <div class="fighter-sprite" id="luchador-mi" style="--pos:2">
+              <img id="mi-sprite" src="" alt="P1" />
+              <div class="weapon-hand hidden" id="mi-equipada"></div>
+              <div class="pa-badge">PA: <span id="pa-mi-valor">0</span></div>
             </div>
-            <div class="hp-row">
-              <div class="hp-bar-bg"><div class="hp-relleno hp-rojo" id="op-hp-relleno"></div></div>
-              <span class="hp-texto" id="op-hp-texto">-/-</span>
+            <div class="fighter-sprite" id="luchador-op" style="--pos:2">
+              <img id="op-sprite" src="" alt="P2" />
+              <div class="weapon-hand hidden" id="op-equipada"></div>
+              <div class="pa-badge">PA: <span id="pa-op-valor">0</span></div>
             </div>
-            <div class="weapon-strip" id="op-weapons-strip"></div>
           </div>
         </div>
 
