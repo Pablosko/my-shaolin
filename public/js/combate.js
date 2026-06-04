@@ -23,12 +23,16 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const realSkin = skin === 'default' ? 'Monje' : skin;
   const cb = 'v11';
   const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
+  console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" url="${url}"`);
   el.onerror = function() {
     this.onerror = null;
     const legacyUrl = getSkinUrl(genero, realSkin) + '?' + cb;
+    console.log(`[setFighterFrame] FALLBACK 1 (legacy) sprite=${spriteId} url="${legacyUrl}"`);
     this.onerror = function() {
       this.onerror = null;
-      this.src = getSkinUrl(genero, 'default') + '?' + cb;
+      const defUrl = getSkinUrl(genero, 'default') + '?' + cb;
+      console.log(`[setFighterFrame] FALLBACK 2 (default) sprite=${spriteId} url="${defUrl}"`);
+      this.src = defUrl;
     };
     this.src = legacyUrl;
   };
@@ -55,6 +59,8 @@ async function loadArena() {
     }
 
     document.getElementById('mi-nombre').textContent = miShaolinInfo.name;
+    console.log('[loadArena] miShaolinInfo.skin:', miShaolinInfo.skin, 'genero:', miShaolinInfo.genero);
+    console.log('[loadArena] miShaolinInfo:', JSON.stringify(miShaolinInfo, null, 2));
     setFighterFrame('mi-sprite', miShaolinInfo.skin, 'idle', miShaolinInfo.genero);
     renderWeaponStrip('mi-weapons-strip', miShaolinInfo.armas || [], null);
     miHpMax = miShaolinInfo.real_max_hp || miShaolinInfo.max_hp;
@@ -223,6 +229,8 @@ async function iniciarCombate(oponente, esBot = false) {
   label.textContent = esModoEntreno ? '🥋 ENTRENAMIENTO' : '⚔️ COMBATE';
 
   document.getElementById('op-nombre').textContent = oponente.name;
+  console.log('[iniciarCombate] oponente.skin:', oponente.skin, 'genero:', oponente.genero);
+  console.log('[iniciarCombate] oponente:', JSON.stringify(oponente, null, 2));
   setFighterFrame('op-sprite', oponente.skin, 'idle', oponente.genero);
   renderWeaponStrip('op-weapons-strip', oponente.armas || [], null);
 
@@ -251,6 +259,7 @@ function volverArena() {
 }
 
 async function renderCombate(result) {
+  console.log('[renderCombate] starting - p1:', p1, 'p2:', p2, 'miShaolinInfo.skin:', miShaolinInfo.skin, 'log.length:', result.log.length);
   const log = result.log;
   const logEl = document.getElementById('log-combate');
   const miNombre = miShaolinInfo.name;
