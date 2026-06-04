@@ -89,6 +89,14 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('v8_default_skin_monje')`);
     console.log('Migration v8_default_skin_monje: all default skins changed to Monje');
   }
+
+  const v9Result = await client.execute(`SELECT name FROM _migrations WHERE name = 'v9_female_skin'`);
+  if (v9Result.rows.length === 0) {
+    await client.execute(`UPDATE shaolins SET skin = 'Monje' WHERE skin IS NULL OR skin = ''`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'v9_female_skin'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('v9_female_skin')`);
+    console.log('Migration v9_female_skin: ensure all characters have skin set');
+  }
 }
 
 module.exports = { runMigrations };

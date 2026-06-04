@@ -21,22 +21,27 @@ function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
   const realSkin = skin === 'default' ? 'Monje' : skin;
-  const cb = 'v15';
+  const cb = 'v16';
+  const urlGen = `/images/skins/${realSkin}-${genero}-${frame}.png?${cb}`;
   const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
-  console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" url="${url}"`);
+  console.log(`[setFighterFrame] sprite=${spriteId} skin="${skin}" realSkin="${realSkin}" frame="${frame}" genero="${genero}" urlGen="${urlGen}" fallback="${url}"`);
   el.onerror = function() {
     this.onerror = null;
-    const legacyUrl = getSkinUrl(genero, realSkin) + '?' + cb;
-    console.log(`[setFighterFrame] FALLBACK 1 (legacy) sprite=${spriteId} url="${legacyUrl}"`);
+    this.src = url;
     this.onerror = function() {
       this.onerror = null;
-      const defUrl = getSkinUrl(genero, 'default') + '?' + cb;
-      console.log(`[setFighterFrame] FALLBACK 2 (default) sprite=${spriteId} url="${defUrl}"`);
-      this.src = defUrl;
+      const legacyUrl = getSkinUrl(genero, realSkin) + '?' + cb;
+      console.log(`[setFighterFrame] FALLBACK 1 (legacy) sprite=${spriteId} url="${legacyUrl}"`);
+      this.onerror = function() {
+        this.onerror = null;
+        const defUrl = getSkinUrl(genero, 'default') + '?' + cb;
+        console.log(`[setFighterFrame] FALLBACK 2 (default) sprite=${spriteId} url="${defUrl}"`);
+        this.src = defUrl;
+      };
+      this.src = legacyUrl;
     };
-    this.src = legacyUrl;
   };
-  el.src = url;
+  el.src = urlGen;
 }
 
 async function loadArena() {
