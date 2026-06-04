@@ -55,6 +55,14 @@ async function runMigrations(client) {
     await client.execute(`INSERT INTO _migrations (name) VALUES ('v5_armas_familias')`);
     console.log('Migration v5_armas_familias: renamed Maza->Puño de Acero, Martillo->Puño de Acero Fino');
   }
+
+  const v6Result = await client.execute(`SELECT name FROM _migrations WHERE name = 'v6_latigo'`);
+  if (v6Result.rows.length === 0) {
+    await client.execute(`UPDATE armas SET nombre = 'Gancho' WHERE nombre = 'Látigo'`);
+    await client.execute(`DELETE FROM _migrations WHERE name = 'v6_latigo'`);
+    await client.execute(`INSERT INTO _migrations (name) VALUES ('v6_latigo')`);
+    console.log('Migration v6_latigo: renamed Látigo->Gancho');
+  }
 }
 
 module.exports = { runMigrations };
