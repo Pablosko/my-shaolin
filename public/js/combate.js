@@ -20,13 +20,14 @@ function weaponIcon(familia) {
 function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
-  const url = `/images/skins/${skin}-${frame}.png`;
+  const cb = 'v10';
+  const url = `/images/skins/${skin}-${frame}.png?${cb}`;
   el.onerror = function() {
     this.onerror = null;
-    const legacyUrl = getSkinUrl(genero, skin);
+    const legacyUrl = getSkinUrl(genero, skin) + '?' + cb;
     this.onerror = function() {
       this.onerror = null;
-      this.src = getSkinUrl(genero, 'default');
+      this.src = getSkinUrl(genero, 'default') + '?' + cb;
     };
     this.src = legacyUrl;
   };
