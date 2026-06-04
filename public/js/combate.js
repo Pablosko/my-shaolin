@@ -283,11 +283,16 @@ async function renderCombate(result) {
   }
 
   async function animarPaso(spriteId, skin, genero, dir) {
-    setFighterFrame(spriteId, skin, 'walk_1', genero);
-    await delay(150);
+    const el = document.getElementById(spriteId);
+    if (el) el.classList.add('caminando');
     setFighterFrame(spriteId, skin, 'walk_2', genero);
-    await delay(150);
+    await delay(170);
+    setFighterFrame(spriteId, skin, 'walk_1', genero);
+    await delay(170);
+    setFighterFrame(spriteId, skin, 'walk_2', genero);
+    await delay(160);
     setFighterFrame(spriteId, skin, 'idle', genero);
+    if (el) el.classList.remove('caminando');
   }
 
   for (const entry of log) {
@@ -352,11 +357,11 @@ async function renderCombate(result) {
         if (entry.p1 !== undefined) p1 = entry.p1;
         if (entry.p2 !== undefined) p2 = entry.p2;
 
-        await animarPaso(spriteId, skin, gen, entry.retrocede ? -1 : 1);
         actualizarPosicion();
+        animarPaso(spriteId, skin, gen, entry.retrocede ? -1 : 1);
         const d = p1 + p2 - 1;
         addLog(logEl, `<span class="info">${entry.actor} se mueve (${entry.distancia !== undefined ? 'Dist ' + entry.distancia : ''})</span>`);
-        await delay(200);
+        await delay(600);
         break;
       }
 
