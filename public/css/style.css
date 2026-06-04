@@ -608,6 +608,9 @@ input:focus, select:focus {
 #luchador-op {
   left: calc(50% + (var(--pos, 2) - 1) * 10%);
 }
+#luchador-op img {
+  transform: scaleX(-1);
+}
 
 .weapon-hand {
   position: absolute;
@@ -618,7 +621,7 @@ input:focus, select:focus {
   animation: fadeInWeapon 0.3s ease;
 }
 #luchador-mi .weapon-hand { right: -18px; }
-#luchador-op .weapon-hand { left: -18px; }
+#luchador-op .weapon-hand { right: -18px; left: auto; }
 
 .pa-badge {
   font-size: 11px;
