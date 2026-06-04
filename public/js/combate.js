@@ -20,11 +20,12 @@ function weaponIcon(familia) {
 function setFighterFrame(spriteId, skin, frame, genero) {
   const el = document.getElementById(spriteId);
   if (!el) return;
-  const cb = 'v10';
-  const url = `/images/skins/${skin}-${frame}.png?${cb}`;
+  const realSkin = skin === 'default' ? 'Monje' : skin;
+  const cb = 'v11';
+  const url = `/images/skins/${realSkin}-${frame}.png?${cb}`;
   el.onerror = function() {
     this.onerror = null;
-    const legacyUrl = getSkinUrl(genero, skin) + '?' + cb;
+    const legacyUrl = getSkinUrl(genero, realSkin) + '?' + cb;
     this.onerror = function() {
       this.onerror = null;
       this.src = getSkinUrl(genero, 'default') + '?' + cb;

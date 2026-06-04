@@ -42,7 +42,7 @@ const API = {
 };
 
 function getSkinUrl(genero, skin) {
-  const s = skin && skin !== 'default' && skin !== 'null' && skin !== 'undefined' ? skin : 'default';
+  const s = (skin && skin !== 'null' && skin !== 'undefined') ? (skin === 'default' ? 'Monje' : skin) : 'Monje';
   return `/images/skins/${s}-${genero}.png`;
 }
 
