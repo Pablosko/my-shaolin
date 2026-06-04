@@ -4,34 +4,16 @@ let currentStatOptions = null;
 let selectedOpcionIndex = null;
 let selectedStatIndex = null;
 
-const SEG_COLORS = [
-  '#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444',
-  '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d', '#450a0a',
-];
-
-function colorForValue(val) {
-  if (val <= 10) return SEG_COLORS[0];
-  if (val <= 20) return SEG_COLORS[1];
-  if (val <= 30) return SEG_COLORS[2];
-  if (val <= 40) return SEG_COLORS[3];
-  if (val <= 50) return SEG_COLORS[4];
-  if (val <= 60) return SEG_COLORS[5];
-  if (val <= 70) return SEG_COLORS[6];
-  if (val <= 80) return SEG_COLORS[7];
-  if (val <= 90) return SEG_COLORS[8];
-  return SEG_COLORS[9];
-}
-
 function renderSegBar(containerId, value) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
   const maxSegs = 10;
-  const filled = Math.min(value, maxSegs);
+  const filled = Math.min(maxSegs, Math.max(0, Math.ceil(value / 10)));
   for (let i = 0; i < maxSegs; i++) {
     const seg = document.createElement('div');
     seg.className = 'seg-bar-segment';
-    seg.style.background = i < filled ? colorForValue(i + 1) : '#2a1a3ab3';
+    seg.style.background = i < filled ? colorForValue(i * 10 + 1) : '#2a1a3ab3';
     container.appendChild(seg);
   }
 }

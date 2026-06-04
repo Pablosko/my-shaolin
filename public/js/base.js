@@ -147,16 +147,13 @@ async function loadBase() {
 
 function renderSegBarStatic(valor) {
   const segs = 10;
-  const filled = Math.min(segs, Math.max(0, Math.round(valor)));
+  const filled = Math.min(segs, Math.max(0, Math.ceil(valor / 10)));
   let html = '';
   for (let i = 0; i < segs; i++) {
-    const ratio = (i + 1) / segs;
     if (i < filled) {
-      const r = Math.round(255 * (1 - ratio));
-      const g = Math.round(200 * ratio);
-      html += `<span class="seg seg-filled" style="background:rgb(${r},${g},80)"></span>`;
+      html += `<span class="seg-bar-segment" style="background:${colorForValue(i * 10 + 1)}"></span>`;
     } else {
-      html += `<span class="seg seg-empty"></span>`;
+      html += `<span class="seg-bar-segment" style="background:#2a1a3ab3"></span>`;
     }
   }
   return html;
